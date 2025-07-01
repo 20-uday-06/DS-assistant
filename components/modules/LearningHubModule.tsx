@@ -18,6 +18,9 @@ const FormattedMessageContent: React.FC<{ content: string }> = React.memo(({ con
     const { theme } = useTheme();
     const syntaxTheme = theme === 'dark' ? vscDarkPlus : prism;
 
+    // Ensure content is properly normalized to prevent rendering issues
+    const normalizedContent = content.trim().normalize('NFC');
+
     const components: Components = {
         code({ node, inline, className, children, ...props }: any) {
             const match = /language-(\w+)/.exec(className || '');
@@ -40,7 +43,7 @@ const FormattedMessageContent: React.FC<{ content: string }> = React.memo(({ con
                 rehypePlugins={[rehypeKatex]}
                 components={components}
             >
-                {content}
+                {normalizedContent}
             </ReactMarkdown>
         </div>
     );
@@ -53,6 +56,7 @@ const LearningHubModule: React.FC = () => {
     const [isLoading, setIsLoading] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
+    const currentMessageRef = useRef<string>('');
     
     useEffect(() => {
         setMessages([
@@ -72,6 +76,19 @@ const LearningHubModule: React.FC = () => {
         if(e) e.preventDefault();
         if (!input.trim() || isLoading) return;
 
+        // Check if user typed exactly "new chat" to clear the conversation
+        if (input.trim() === 'new chat') {
+            setMessages([
+                {
+                    id: 'initial-message',
+                    role: 'model',
+                    text: "Welcome to the Learning Hub! What data science concept would you like to explore today? Ask me about anything from p-values to transformers.",
+                }
+            ]);
+            setInput('');
+            return;
+        }
+
         const newUserMessage: ChatMessage = { id: Date.now().toString(), role: 'user', text: input };
         const updatedMessages = [...messages, newUserMessage];
         setMessages(updatedMessages);
@@ -81,13 +98,25 @@ const LearningHubModule: React.FC = () => {
         const modelMessageId = (Date.now() + 1).toString();
         setMessages(prev => [...prev, { id: modelMessageId, role: 'model', text: '', isLoading: true }]);
 
+        // Reset the current message ref
+        currentMessageRef.current = '';
+
         try {
             await geminiService.streamChat(
                 updatedMessages,
                 (chunk) => {
+                    // Ensure chunk is properly cleaned and doesn't contain control characters
+                    const cleanChunk = chunk.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+                    
+                    // Update the ref with the complete message
+                    currentMessageRef.current += cleanChunk;
+                    
                     setMessages(prev =>
                         prev.map(msg =>
-                            msg.id === modelMessageId ? { ...msg, text: msg.text + chunk } : msg
+                            msg.id === modelMessageId ? { 
+                                ...msg, 
+                                text: currentMessageRef.current 
+                            } : msg
                         )
                     );
                 },
@@ -95,6 +124,7 @@ const LearningHubModule: React.FC = () => {
             );
         } finally {
             setIsLoading(false);
+            currentMessageRef.current = ''; // Reset ref
             setMessages(prev =>
                 prev.map(msg =>
                     msg.id === modelMessageId ? { ...msg, isLoading: false } : msg

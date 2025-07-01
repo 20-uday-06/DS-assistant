@@ -14,6 +14,9 @@ const FormattedResponse: React.FC<{ content: string }> = React.memo(({ content }
     const { theme } = useTheme();
     const syntaxTheme = theme === 'dark' ? vscDarkPlus : prism;
 
+    // Ensure content is properly normalized to prevent rendering issues
+    const normalizedContent = content.trim().normalize('NFC');
+
     const components: Components = {
         code({ node, inline, className, children, ...props }: any) {
             const match = /language-(\w+)/.exec(className || '');
@@ -36,7 +39,7 @@ const FormattedResponse: React.FC<{ content: string }> = React.memo(({ content }
                 rehypePlugins={[rehypeKatex]}
                 components={components}
             >
-                {content}
+                {normalizedContent}
             </ReactMarkdown>
         </div>
     );

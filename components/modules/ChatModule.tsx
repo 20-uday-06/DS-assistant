@@ -105,6 +105,19 @@ const ChatModule: React.FC = () => {
         if(e) e.preventDefault();
         if (!input.trim() || isLoading) return;
 
+        // Check if user typed exactly "new chat" to clear the conversation
+        if (input.trim() === 'new chat') {
+            setMessages([
+                {
+                    id: 'initial-message',
+                    role: 'model',
+                    text: "Hello! I'm your Data Science Co-Pilot. How can I assist you today? Feel free to ask about Python, SQL, statistics, or machine learning.",
+                }
+            ]);
+            setInput('');
+            return;
+        }
+
         const newUserMessage: ChatMessage = { id: Date.now().toString(), role: 'user', text: input };
         const updatedMessages = [...messages, newUserMessage];
         setMessages(updatedMessages);
