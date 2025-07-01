@@ -47,8 +47,17 @@ const FormattedMessageContent: React.FC<{ content: string }> = React.memo(({ con
                                 prose-td:p-2 prose-tr:border-b dark:prose-tr:border-gray-700/50
                                 prose-a:text-accent-blue hover:prose-a:underline">
             <ReactMarkdown
-                remarkPlugins={[remarkMath, remarkGfm]}
-                rehypePlugins={[rehypeKatex]}
+                remarkPlugins={[
+                    [remarkMath, { singleDollarTextMath: true }],
+                    remarkGfm
+                ]}
+                rehypePlugins={[
+                    [rehypeKatex, { 
+                        strict: false,
+                        trust: true,
+                        output: 'html'
+                    }]
+                ]}
                 components={components}
             >
                 {normalizedContent}

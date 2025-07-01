@@ -1,0 +1,60 @@
+/* Custom styles for better mathematical formula rendering */
+
+/* Ensure KaTeX formulas are properly spaced and visible */
+.katex {
+  font-size: 1.1em !important;
+  color: inherit !important;
+}
+
+.katex-display {
+  margin: 1em 0 !important;
+  text-align: center !important;
+}
+
+/* Dark mode KaTeX adjustments */
+.dark .katex {
+  color: #e5e7eb !important;
+}
+
+.dark .katex .base {
+  color: #e5e7eb !important;
+}
+
+/* Ensure math elements don't get cut off */
+.katex-html {
+  white-space: nowrap;
+}
+
+/* Fix for inline math */
+.katex-inline {
+  display: inline-block;
+  vertical-align: baseline;
+}
+
+/* Better styling for fractions and complex expressions */
+.katex .frac-line {
+  border-bottom-color: currentColor !important;
+}
+
+.katex .sqrt .root {
+  color: inherit !important;
+}
+
+/* Ensure subscripts and superscripts are properly sized */
+.katex .sizing {
+  color: inherit !important;
+}
+
+/* Fix for math in prose content */
+.prose .katex {
+  color: inherit !important;
+}
+
+.prose .katex-display {
+  margin: 1.5em 0 !important;
+}
+
+/* Ensure math doesn't break layouts */
+.katex-html {
+  overflow: visible;
+}

@@ -12,7 +12,14 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus, prism } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import type { Components } from 'react-markdown';
 
-const LEARNING_PROMPT = `You are an expert educator and data scientist specializing in AI, Machine Learning, Statistics, and Probability. Your goal is to explain complex concepts in a clear, intuitive, and engaging way. Use analogies, step-by-step breakdowns, real-world examples, and well-formatted markdown (including LaTeX for math) to make your explanations easy to understand for a fellow data scientist who wants to deepen their knowledge.`;
+const LEARNING_PROMPT = `You are an expert educator and data scientist specializing in AI, Machine Learning, Statistics, and Probability. Your goal is to explain complex concepts in a clear, intuitive, and engaging way. Use analogies, step-by-step breakdowns, real-world examples, and well-formatted markdown (including LaTeX for math) to make your explanations easy to understand for a fellow data scientist who wants to deepen their knowledge.
+
+For mathematical content, always use proper LaTeX formatting:
+- Use $inline math$ for inline formulas and $$display math$$ for display formulas
+- Use proper LaTeX notation: \\mu for μ, \\sigma for σ, \\bar{x} for x̄, H_0 for H₀, H_1 for H₁
+- Format statistical formulas clearly: Z = \\frac{\\bar{x} - \\mu_0}{\\sigma/\\sqrt{n}}
+- Use \\frac{numerator}{denominator} for fractions, \\sqrt{expression} for square roots
+- Always wrap mathematical expressions in LaTeX delimiters ($ or $$)`;
 
 const FormattedMessageContent: React.FC<{ content: string }> = React.memo(({ content }) => {
     const { theme } = useTheme();
@@ -37,10 +44,25 @@ const FormattedMessageContent: React.FC<{ content: string }> = React.memo(({ con
     };
 
     return (
-        <div className="prose prose-sm dark:prose-invert max-w-none prose-p:my-2 prose-headings:my-3 prose-headings:font-semibold prose-code:bg-gray-300/70 dark:prose-code:bg-gray-900/70 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded-md">
+        <div className="prose prose-sm dark:prose-invert max-w-none 
+                                prose-p:my-2 
+                                prose-headings:my-3 prose-headings:font-semibold
+                                prose-code:bg-gray-300/70 dark:prose-code:bg-gray-900/70 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded-md
+                                prose-table:w-full prose-table:text-sm prose-thead:border-b dark:prose-thead:border-gray-600 prose-th:p-2 prose-th:font-semibold 
+                                prose-td:p-2 prose-tr:border-b dark:prose-tr:border-gray-700/50
+                                prose-a:text-accent-blue hover:prose-a:underline">
             <ReactMarkdown
-                remarkPlugins={[remarkMath, remarkGfm]}
-                rehypePlugins={[rehypeKatex]}
+                remarkPlugins={[
+                    [remarkMath, { singleDollarTextMath: true }],
+                    remarkGfm
+                ]}
+                rehypePlugins={[
+                    [rehypeKatex, { 
+                        strict: false,
+                        trust: true,
+                        output: 'html'
+                    }]
+                ]}
                 components={components}
             >
                 {normalizedContent}

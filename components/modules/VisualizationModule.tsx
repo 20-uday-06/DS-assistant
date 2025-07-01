@@ -40,8 +40,17 @@ const FormattedResponse: React.FC<{ content: string }> = React.memo(({ content }
     return (
         <div className="prose prose-sm dark:prose-invert max-w-none prose-p:my-2 prose-headings:my-3 prose-headings:font-semibold prose-code:bg-gray-300/70 dark:prose-code:bg-gray-900/70 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded-md">
             <ReactMarkdown
-                remarkPlugins={[remarkMath, remarkGfm]}
-                rehypePlugins={[rehypeKatex]}
+                remarkPlugins={[
+                    [remarkMath, { singleDollarTextMath: true }],
+                    remarkGfm
+                ]}
+                rehypePlugins={[
+                    [rehypeKatex, { 
+                        strict: false,
+                        trust: true,
+                        output: 'html'
+                    }]
+                ]}
                 components={components}
             >
                 {normalizedContent}
