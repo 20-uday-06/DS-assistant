@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gemini DS Co-Pilot</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'class',
+        theme: {
+          extend: {
+            typography: (theme) => ({
+              DEFAULT: {
+                css: {
+                  'code::before': {
+                    content: '""',
+                  },
+                  'code::after': {
+                    content: '""',
+                  },
+                  code: {
+                    fontWeight: '400'
+                  },
+                  pre: {
+                    padding: '0 !important',
+                    backgroundColor: 'transparent',
+                  }
+                },
+              },
+            }),
+            colors: {
+              'brand-light': '#F3F4F6', // Light gray background
+              'brand-dark': '#0D1117',  // Dark, near-black background
+              'accent-blue': '#3B82F6',
+              'accent-purple': '#8B5CF6',
+              'glass-light': 'rgba(255, 255, 255, 0.3)',
+              'glass-dark': 'rgba(20, 20, 30, 0.5)',
+              'border-light': 'rgba(209, 213, 219, 0.5)',
+              'border-dark': 'rgba(55, 65, 81, 0.4)',
+            },
+            boxShadow: {
+              'glow-blue': '0 0 20px rgba(59, 130, 246, 0.5)',
+              'glow-purple': '0 0 20px rgba(139, 92, 246, 0.5)',
+            },
+            keyframes: {
+                aurora: {
+                  from: {
+                    backgroundPosition: '0% 50%',
+                  },
+                  to: {
+                    backgroundPosition: '100% 50%',
+                  },
+                },
+            },
+            animation: {
+                aurora: 'aurora 20s ease-in-out infinite',
+            },
+          }
+        }
+      }
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" integrity="sha384-n8MVd4RsNIU0KOVwNw43oAnd6ffG6A63eOCflow0vG3/DENJrOOJxGfAI59MAfqr" crossorigin="anonymous">
+    <script src="https://unpkg.com/framer-motion@10/dist/framer-motion.js"></script>
+  <script type="importmap">
+{
+  "imports": {
+    "react/": "https://esm.sh/react@^19.1.0/",
+    "react": "https://esm.sh/react@^19.1.0",
+    "react-dom/": "https://esm.sh/react-dom@^19.1.0/",
+    "framer-motion": "https://esm.sh/framer-motion@^12.22.0",
+    "@google/genai": "https://esm.sh/@google/genai@^1.7.0",
+    "react-markdown": "https://esm.sh/react-markdown@9.0.1",
+    "remark-math": "https://esm.sh/remark-math@6.0.0",
+    "rehype-katex": "https://esm.sh/rehype-katex@7.0.0",
+    "remark-gfm": "https://esm.sh/remark-gfm@4.0.0",
+    "react-syntax-highlighter": "https://esm.sh/react-syntax-highlighter@15.5.0",
+    "react-syntax-highlighter/dist/esm/styles/prism": "https://esm.sh/react-syntax-highlighter@15.5.0/dist/esm/styles/prism",
+    "react-syntax-highlighter/": "https://esm.sh/react-syntax-highlighter@^15.6.1/",
+    "plotly.js-dist-min": "https://esm.sh/plotly.js-dist-min@2.32.0",
+    "react-plotly.js/factory": "https://esm.sh/react-plotly.js@2.6.0/factory",
+    "react-plotly.js/": "https://esm.sh/react-plotly.js@^2.6.0/"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body class="font-[Inter,sans-serif]">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>

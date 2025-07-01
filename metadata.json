@@ -1,0 +1,5 @@
+{
+  "name": "Gemini Data Science Co-Pilot",
+  "description": "An AI-powered personal assistant for data scientists, providing expert help with code, statistics, machine learning models, and data visualization. The application features a luxury, futuristic UI with modular components.",
+  "requestFramePermissions": []
+}
