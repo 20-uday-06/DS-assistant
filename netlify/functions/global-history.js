@@ -33,6 +33,7 @@ const connectToDatabase = async () => {
 
   try {
     const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/gemini-copilot';
+    console.log('Connecting to MongoDB...');
     await mongoose.connect(mongoUri, {
       bufferCommands: false,
     });
