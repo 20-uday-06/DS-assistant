@@ -73,6 +73,7 @@ const ChatModule: React.FC = () => {
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLTextAreaElement>(null);
     const currentMessageRef = useRef<string>('');
+    const streamingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -81,6 +82,15 @@ const ChatModule: React.FC = () => {
     useEffect(() => {
         scrollToBottom();
     }, [messages]);
+    
+    // Cleanup timeout on unmount
+    useEffect(() => {
+        return () => {
+            if (streamingTimeoutRef.current) {
+                clearTimeout(streamingTimeoutRef.current);
+            }
+        };
+    }, []);
     
     useEffect(() => {
         setMessages([
@@ -149,31 +159,55 @@ const ChatModule: React.FC = () => {
                     // Update the ref with the complete message
                     currentMessageRef.current += cleanChunk;
                     
-                    setMessages(prev =>
-                        prev.map(msg =>
-                            msg.id === modelMessageId ? { 
-                                ...msg, 
-                                text: currentMessageRef.current 
-                            } : msg
-                        )
-                    );
+                    // Clear any existing timeout
+                    if (streamingTimeoutRef.current) {
+                        clearTimeout(streamingTimeoutRef.current);
+                    }
+                    
+                    // Debounce the UI update to prevent too many re-renders
+                    streamingTimeoutRef.current = setTimeout(() => {
+                        setMessages(prev =>
+                            prev.map(msg =>
+                                msg.id === modelMessageId ? { 
+                                    ...msg, 
+                                    text: currentMessageRef.current 
+                                } : msg
+                            )
+                        );
+                    }, 50); // Update UI every 50ms instead of on every chunk
                 }
             );
         } catch (error) {
             console.error(error);
             setMessages(prev =>
                 prev.map(msg =>
-                    msg.id === modelMessageId ? { ...msg, text: "An error occurred.", isLoading: false } : msg
+                    msg.id === modelMessageId ? { 
+                        ...msg, 
+                        text: "I apologize, but I encountered an error while generating the response. Please try asking again.", 
+                        isLoading: false 
+                    } : msg
                 )
             );
         } finally {
             setIsLoading(false);
-            currentMessageRef.current = ''; // Reset ref
+            
+            // Clear any pending timeout
+            if (streamingTimeoutRef.current) {
+                clearTimeout(streamingTimeoutRef.current);
+            }
+            
+            // Ensure final message update
             setMessages(prev =>
                 prev.map(msg =>
-                    msg.id === modelMessageId ? { ...msg, isLoading: false } : msg
+                    msg.id === modelMessageId ? { 
+                        ...msg, 
+                        text: currentMessageRef.current,
+                        isLoading: false 
+                    } : msg
                 )
             );
+            
+            currentMessageRef.current = ''; // Reset ref
             inputRef.current?.focus();
         }
     };
@@ -241,6 +275,7 @@ const ChatModule: React.FC = () => {
 
 const MessageBubble: React.FC<{ message: ChatMessage }> = ({ message }) => {
     const isModel = message.role === 'model';
+    
     return (
         <motion.div
             layout
@@ -255,7 +290,11 @@ const MessageBubble: React.FC<{ message: ChatMessage }> = ({ message }) => {
                     AI
                 </div>
             )}
-            <div
+            <motion.div
+                layout
+                initial={isModel ? { width: 'auto', minHeight: '3rem' } : false}
+                animate={isModel ? { width: 'auto', minHeight: 'auto' } : false}
+                transition={{ duration: 0.3, ease: 'easeInOut' }}
                 className={`px-4 py-3 rounded-2xl w-fit max-w-full ${
                     isModel
                         ? 'bg-gray-200/80 dark:bg-gray-700/50 rounded-tl-none'
@@ -263,8 +302,54 @@ const MessageBubble: React.FC<{ message: ChatMessage }> = ({ message }) => {
                 }`}
             >
                 <FormattedMessageContent content={message.text} />
-                {message.isLoading && <span className="inline-block w-2 h-4 bg-gray-500 dark:bg-gray-300 animate-pulse ml-1 rounded-sm" />}
-            </div>
+                {message.isLoading && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="flex items-center mt-2"
+                    >
+                        <div className="flex space-x-1">
+                            <motion.div
+                                animate={{
+                                    scale: [1, 1.2, 1],
+                                    opacity: [0.5, 1, 0.5],
+                                }}
+                                transition={{
+                                    duration: 1.5,
+                                    repeat: Infinity,
+                                    delay: 0,
+                                }}
+                                className="w-2 h-2 bg-gray-500 dark:bg-gray-300 rounded-full"
+                            />
+                            <motion.div
+                                animate={{
+                                    scale: [1, 1.2, 1],
+                                    opacity: [0.5, 1, 0.5],
+                                }}
+                                transition={{
+                                    duration: 1.5,
+                                    repeat: Infinity,
+                                    delay: 0.2,
+                                }}
+                                className="w-2 h-2 bg-gray-500 dark:bg-gray-300 rounded-full"
+                            />
+                            <motion.div
+                                animate={{
+                                    scale: [1, 1.2, 1],
+                                    opacity: [0.5, 1, 0.5],
+                                }}
+                                transition={{
+                                    duration: 1.5,
+                                    repeat: Infinity,
+                                    delay: 0.4,
+                                }}
+                                className="w-2 h-2 bg-gray-500 dark:bg-gray-300 rounded-full"
+                            />
+                        </div>
+                        <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">Thinking...</span>
+                    </motion.div>
+                )}
+            </motion.div>
         </motion.div>
     );
 };
