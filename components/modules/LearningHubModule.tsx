@@ -444,5 +444,4 @@ const MessageBubble: React.FC<{ message: ChatMessage }> = ({ message }) => {
     );
 };
 
-
 export default LearningHubModule;
