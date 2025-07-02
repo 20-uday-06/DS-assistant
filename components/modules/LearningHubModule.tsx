@@ -62,10 +62,14 @@ const FormattedMessageContent: React.FC<{ content: string }> = React.memo(({ con
     const normalizedContent = content.trim().normalize('NFC');
 
     const components: Components = {
-        code({ node, inline, className, children, ...props }: any) {
+         code({ node, inline, className, children, ...props }: any) {
             const match = /language-(\w+)/.exec(className || '');
             return !inline && match ? (
-                <SyntaxHighlighter style={syntaxTheme as any} language={match[1]} PreTag="div">
+                <SyntaxHighlighter
+                    style={syntaxTheme as any}
+                    language={match[1]}
+                    PreTag="div"
+                >
                     {String(children).replace(/\n$/, '')}
                 </SyntaxHighlighter>
             ) : (
@@ -77,13 +81,14 @@ const FormattedMessageContent: React.FC<{ content: string }> = React.memo(({ con
     };
 
     return (
-        <div className="prose prose-sm dark:prose-invert max-w-none chat-message-content 
+        <div className="prose prose-sm dark:prose-invert max-w-none
                                 prose-p:my-2 
                                 prose-headings:my-3 prose-headings:font-semibold
                                 prose-code:bg-gray-300/70 dark:prose-code:bg-gray-900/70 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded-md
                                 prose-table:w-full prose-table:text-sm prose-thead:border-b dark:prose-thead:border-gray-600 prose-th:p-2 prose-th:font-semibold 
                                 prose-td:p-2 prose-tr:border-b dark:prose-tr:border-gray-700/50
-                                prose-a:text-accent-blue hover:prose-a:underline">
+                                prose-a:text-accent-blue hover:prose-a:underline"
+                                style={{ wordBreak: 'break-word', overflowWrap: 'break-word', minHeight: '1.5rem' }}>
             <ReactMarkdown
                 remarkPlugins={[
                     [remarkMath, { singleDollarTextMath: true }],
@@ -106,32 +111,54 @@ const FormattedMessageContent: React.FC<{ content: string }> = React.memo(({ con
 
 
 const LearningHubModule: React.FC = () => {
-    const [messages, setMessages] = useState<ChatMessage[]>([]);
+    const [messages, setMessages] = useState<ChatMessage[]>([
+        {
+            id: 'initial-message',
+            role: 'model',
+            text: "Welcome to the Learning Hub! What data science concept would you like to explore today? Ask me about anything from p-values to transformers.",
+        }
+    ]);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
-    const inputRef = useRef<HTMLInputElement>(null);
-    const currentMessageRef = useRef<string>('');
-    
-    useEffect(() => {
-        setMessages([
-            {
-                id: 'initial-message',
-                role: 'model',
-                text: "Welcome to the Learning Hub! What data science concept would you like to explore today? Ask me about anything from p-values to transformers.",
-            }
-        ])
+    const inputRef = useRef<HTMLTextAreaElement>(null);
+    const streamingMessageRef = useRef<string>('');
+    const abortControllerRef = useRef<AbortController | null>(null);
+
+    const scrollToBottom = useCallback(() => {
+        requestAnimationFrame(() => {
+            messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        });
     }, []);
 
     useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, [messages]);
+        scrollToBottom();
+    }, [messages, scrollToBottom]);
 
-    const handleSubmit = async (e?: React.FormEvent) => {
+    const handleStop = useCallback(() => {
+        if (abortControllerRef.current) {
+            abortControllerRef.current.abort();
+        }
+        setIsLoading(false);
+        inputRef.current?.focus();
+    }, []);
+
+    const handleInputChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+        const textarea = e.target;
+        setInput(textarea.value);
+        
+        // Auto-resize textarea
+        textarea.style.height = 'auto';
+        const scrollHeight = textarea.scrollHeight;
+        const maxHeight = 192;
+        textarea.style.height = Math.min(scrollHeight, maxHeight) + 'px';
+    }, []);
+
+    const handleSubmit = useCallback(async (e?: React.FormEvent) => {
         if(e) e.preventDefault();
         if (!input.trim() || isLoading) return;
 
-        // Check if user typed exactly "new chat" to clear the conversation
+        // Check if user typed "new chat" to clear the conversation
         if (input.trim() === 'new chat') {
             setMessages([
                 {
@@ -141,53 +168,76 @@ const LearningHubModule: React.FC = () => {
                 }
             ]);
             setInput('');
-            sessionManager.startNewSession(); // Start new session for history
+            
+            if (inputRef.current) {
+                inputRef.current.style.height = '3rem';
+            }
+            
+            sessionManager.startNewSession();
             return;
         }
 
-        // Save user query to history
         const userQueryText = input.trim();
         const summary = `Learning: ${userQueryText.length > 80 ? userQueryText.substring(0, 80) + '...' : userQueryText}`;
-        sessionManager.saveUserQuery(userQueryText, summary).catch(error => {
-            console.error('Failed to save user query to history:', error);
-        });
+        
+        // Save to history (async, don't wait)
+        sessionManager.saveUserQuery(userQueryText, summary).catch(console.error);
 
-        const newUserMessage: ChatMessage = { id: Date.now().toString(), role: 'user', text: input };
+        const newUserMessage: ChatMessage = { 
+            id: Date.now().toString(), 
+            role: 'user', 
+            text: input.trim() 
+        };
+        
         const updatedMessages = [...messages, newUserMessage];
         setMessages(updatedMessages);
         setInput('');
+        
+        if (inputRef.current) {
+            inputRef.current.style.height = '3rem';
+        }
+        
         setIsLoading(true);
+        streamingMessageRef.current = '';
 
         const modelMessageId = (Date.now() + 1).toString();
-        setMessages(prev => [...prev, { id: modelMessageId, role: 'model', text: '', isLoading: true }]);
+        const loadingMessage: ChatMessage = { 
+            id: modelMessageId, 
+            role: 'model', 
+            text: '', 
+            isLoading: true 
+        };
         
-        // Reset the current message ref
-        currentMessageRef.current = '';
+        setMessages(prev => [...prev, loadingMessage]);
+        
+        abortControllerRef.current = new AbortController();
 
         try {
-            let streamCompleted = false;
-            let chunkCounter = 0;
+            let isStreamActive = true;
+            let lastUpdateTime = 0;
+            const UPDATE_THROTTLE = 100;
+            let totalChunksReceived = 0;
             
             await geminiService.streamChat(
                 updatedMessages,
                 (chunk) => {
-                    // Ensure chunk is properly cleaned and doesn't contain control characters
+                    if (!isStreamActive || abortControllerRef.current?.signal.aborted) {
+                        return;
+                    }
+                    
                     const cleanChunk = chunk.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+                    streamingMessageRef.current += cleanChunk;
+                    totalChunksReceived++;
                     
-                    // Update the ref with the complete message
-                    currentMessageRef.current += cleanChunk;
-                    chunkCounter++;
-                    
-                    // Throttle UI updates for better performance with very long educational responses
-                    // Update every 5 chunks for Learning Hub (since responses are typically longer)
-                    if (chunkCounter % 5 === 0 || cleanChunk.length > 100) {
-                        setMessages(prev =>
-                            prev.map(msg =>
-                                msg.id === modelMessageId ? { 
-                                    ...msg, 
-                                    text: currentMessageRef.current,
-                                    isLoading: true // Keep loading state until stream completes
-                                } : msg
+                    const now = Date.now();
+                    if (now - lastUpdateTime >= UPDATE_THROTTLE) {
+                        lastUpdateTime = now;
+                        
+                        setMessages(prevMessages => 
+                            prevMessages.map(msg =>
+                                msg.id === modelMessageId 
+                                    ? { ...msg, text: streamingMessageRef.current, isLoading: true }
+                                    : msg
                             )
                         );
                     }
@@ -195,42 +245,65 @@ const LearningHubModule: React.FC = () => {
                 LEARNING_PROMPT
             );
             
-            streamCompleted = true;
+            isStreamActive = false;
             
-            // Always do a final update to ensure we have the complete response
-            if (streamCompleted) {
-                // Use setTimeout to ensure this update happens after any other state updates
-                setTimeout(() => {
-                    setMessages(prev =>
-                        prev.map(msg =>
-                            msg.id === modelMessageId ? { 
+            // Final update - ensure message is preserved
+            const finalText = streamingMessageRef.current;
+            if (finalText && !abortControllerRef.current?.signal.aborted) {
+                // Check if the response seems incomplete (ends abruptly with certain patterns)
+                const seemsIncomplete = /\\[a-zA-Z]*$|[{(]$|\$$/.test(finalText.trim());
+                
+                let displayText = finalText;
+                if (seemsIncomplete && totalChunksReceived > 0) {
+                    displayText += '\n\n*Note: The response may have been cut off. Please try asking again for a complete answer.*';
+                }
+                
+                setMessages(prevMessages => 
+                    prevMessages.map(msg =>
+                        msg.id === modelMessageId 
+                            ? { ...msg, text: displayText, isLoading: false }
+                            : msg
+                    )
+                );
+            } else if (!finalText && totalChunksReceived === 0) {
+                // No content received at all
+                setMessages(prevMessages => 
+                    prevMessages.map(msg =>
+                        msg.id === modelMessageId 
+                            ? { 
                                 ...msg, 
-                                text: currentMessageRef.current,
+                                text: "I apologize, but I didn't receive a response. This might be due to a network issue or API limit. Please try again.", 
                                 isLoading: false 
-                            } : msg
-                        )
-                    );
-                }, 0);
+                              }
+                            : msg
+                    )
+                );
             }
-        } catch (error) {
-            console.error("Error in Learning Hub:", error);
-            setMessages(prev =>
-                prev.map(msg =>
-                    msg.id === modelMessageId ? { 
-                        ...msg, 
-                        text: "I apologize, but I encountered an error while generating the response. Please try asking again.", 
-                        isLoading: false 
-                    } : msg
-                )
-            );
+            
+        } catch (error: any) {
+            if (!abortControllerRef.current?.signal.aborted) {
+                console.error("Streaming error:", error);
+                setMessages(prevMessages => 
+                    prevMessages.map(msg =>
+                        msg.id === modelMessageId 
+                            ? { 
+                                ...msg, 
+                                text: streamingMessageRef.current || "I apologize, but I encountered an error. Please try again.", 
+                                isLoading: false 
+                              }
+                            : msg
+                    )
+                );
+            }
         } finally {
             setIsLoading(false);
-            currentMessageRef.current = ''; // Reset ref
+            abortControllerRef.current = null;
+            streamingMessageRef.current = '';
             inputRef.current?.focus();
         }
-    };
-
-     return (
+    }, [input, isLoading, messages]);
+    
+    return (
         <div className="w-full h-full bg-glass-light dark:bg-glass-dark border border-border-light dark:border-border-dark rounded-2xl backdrop-blur-lg shadow-lg flex flex-col overflow-hidden">
             <header className="p-4 border-b border-border-light dark:border-border-dark flex-shrink-0">
                 <h2 className="text-xl font-bold">Learning Hub</h2>
@@ -248,24 +321,40 @@ const LearningHubModule: React.FC = () => {
 
             <footer className="p-4 border-t border-border-light dark:border-border-dark flex-shrink-0">
                 <form onSubmit={handleSubmit} className="relative">
-                    <input
+                    <textarea
                         ref={inputRef}
-                        type="text"
                         value={input}
-                        onChange={(e) => setInput(e.target.value)}
+                        onChange={handleInputChange}
                         placeholder="e.g., Explain the bias-variance tradeoff"
-                        className="w-full h-12 p-3 pr-20 bg-gray-200/50 dark:bg-brand-dark/50 border border-border-light dark:border-border-dark rounded-xl focus:ring-2 focus:ring-accent-blue focus:outline-none transition-all duration-300"
+                        className="w-full min-h-[3rem] max-h-48 p-3 pr-20 bg-gray-200/50 dark:bg-brand-dark/50 border border-border-light dark:border-border-dark rounded-xl focus:ring-2 focus:ring-accent-blue focus:outline-none transition-all duration-300 resize-none"
                         disabled={isLoading}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter' && !e.shiftKey) {
+                                e.preventDefault();
+                                handleSubmit();
+                            }
+                        }}
                     />
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center">
-                        <motion.button
-                            type="submit"
-                            disabled={!input.trim() || isLoading}
-                            className="w-9 h-9 flex items-center justify-center bg-gradient-to-br from-accent-blue to-accent-purple text-white rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 hover:shadow-glow-blue"
-                            whileTap={{ scale: 0.9 }}
-                        >
-                            <PaperAirplaneIcon className="w-5 h-5" />
-                        </motion.button>
+                    <div className="absolute right-3 bottom-3 flex items-center">
+                        {isLoading ? (
+                            <motion.button
+                                type="button"
+                                onClick={handleStop}
+                                className="w-9 h-9 flex items-center justify-center bg-red-500 text-white rounded-full transition-all duration-300 hover:bg-red-600"
+                                whileTap={{ scale: 0.9 }}
+                            >
+                                <StopIcon className="w-4 h-4" />
+                            </motion.button>
+                        ) : (
+                            <motion.button
+                                type="submit"
+                                disabled={!input.trim() || isLoading}
+                                className="w-9 h-9 flex items-center justify-center bg-gradient-to-br from-accent-blue to-accent-purple text-white rounded-full disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 hover:shadow-glow-blue"
+                                whileTap={{ scale: 0.9 }}
+                            >
+                                <PaperAirplaneIcon className="w-5 h-5" />
+                            </motion.button>
+                        )}
                     </div>
                 </form>
             </footer>
@@ -283,7 +372,7 @@ const MessageBubble: React.FC<{ message: ChatMessage }> = ({ message }) => {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.3, ease: 'easeOut' }}
-            className={`flex items-start gap-3 max-w-4xl w-full message-bubble ${isModel ? 'justify-start' : 'ml-auto justify-end'}`}
+            className={`flex items-start gap-3 max-w-4xl w-full ${isModel ? 'justify-start' : 'ml-auto justify-end'}`}
         >
             {isModel && (
                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-accent-purple to-pink-500 flex items-center justify-center text-white font-bold text-sm shadow-md">
@@ -291,7 +380,7 @@ const MessageBubble: React.FC<{ message: ChatMessage }> = ({ message }) => {
                 </div>
             )}
             <div
-                className={`px-4 py-3 rounded-2xl w-fit max-w-full min-h-[3rem] ${
+                className={`px-4 py-3 rounded-2xl w-fit max-w-full ${
                     isModel
                         ? 'bg-gray-200/80 dark:bg-gray-700/50 rounded-tl-none'
                         : 'bg-accent-blue text-white rounded-br-none'
@@ -299,7 +388,7 @@ const MessageBubble: React.FC<{ message: ChatMessage }> = ({ message }) => {
                 style={{ 
                     wordBreak: 'break-word',
                     overflowWrap: 'break-word',
-                    minHeight: isModel ? '3rem' : 'auto'
+                    minHeight: '3rem'
                 }}
             >
                 <FormattedMessageContent content={message.text} />

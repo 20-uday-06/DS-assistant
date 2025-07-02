@@ -17,7 +17,16 @@ interface HistorySessionDetail {
   lastUpdated: string;
 }
 
-const API_BASE_URL = (import.meta as any).env?.VITE_API_URL || 'http://localhost:5000';
+const getApiBaseUrl = () => {
+  // In production (Netlify), use relative URLs to the same domain
+  if (window.location.hostname !== 'localhost') {
+    return '';
+  }
+  // In development, use localhost:5000
+  return 'http://localhost:5000';
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 export class HistoryService {
   static async getHistorySessions(): Promise<HistorySession[]> {

@@ -133,7 +133,8 @@ const ChatModule: React.FC = () => {
     const fetchGlobalHistory = useCallback(async () => {
         setIsLoadingHistory(true);
         try {
-            const response = await fetch('http://localhost:5000/api/history/global/recent?limit=50');
+            const apiBase = window.location.hostname !== 'localhost' ? '' : 'http://localhost:5000';
+            const response = await fetch(`${apiBase}/api/global-history?limit=50`);
             if (response.ok) {
                 const data = await response.json();
                 setGlobalHistory(data);
@@ -147,7 +148,8 @@ const ChatModule: React.FC = () => {
 
     const fetchAnalytics = useCallback(async () => {
         try {
-            const response = await fetch('http://localhost:5000/api/analytics');
+            const apiBase = window.location.hostname !== 'localhost' ? '' : 'http://localhost:5000';
+            const response = await fetch(`${apiBase}/api/analytics`);
             if (response.ok) {
                 const data = await response.json();
                 setAnalytics(data);

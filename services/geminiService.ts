@@ -27,6 +27,7 @@ if (!apiKey) {
 // Initialize Google Genai API
 const ai = new GoogleGenAI({ apiKey });
 
+
 const formatHistory = (history: ChatMessage[]): Content[] => {
     // Filter out the system message if it exists, as it's handled by systemInstruction
     return history
@@ -51,21 +52,43 @@ class GeminiService {
                 contents,
                 config: { 
                     systemInstruction,
-                    maxOutputTokens: 8192, // Increase token limit for longer responses
+                    maxOutputTokens: 16384, // Increased token limit for longer educational responses
                     temperature: 0.7,
                     topP: 0.8,
                     topK: 40
                 },
             });
 
+            let hasReceivedContent = false;
+            
             for await (const chunk of responseStream) {
                 if (chunk.text) {
+                    hasReceivedContent = true;
                     onChunk(chunk.text);
                 }
             }
+            
+            // Check if we received any content
+            if (!hasReceivedContent) {
+                console.warn("No content received from Gemini API");
+                onChunk("\n\n> I apologize, but I didn't receive a complete response. Please try asking your question again.");
+            }
+            
         } catch (error) {
             console.error("Error streaming chat:", error);
-            onChunk("\n\n> Sorry, I encountered an error while processing your request. Please try again.");
+            
+            // More specific error messages
+            if (error instanceof Error) {
+                if (error.message.includes('quota') || error.message.includes('limit')) {
+                    onChunk("\n\n> I've reached my usage limit. Please try again in a few moments.");
+                } else if (error.message.includes('network') || error.message.includes('fetch')) {
+                    onChunk("\n\n> Network error occurred. Please check your connection and try again.");
+                } else {
+                    onChunk("\n\n> Sorry, I encountered an error while processing your request. Please try again.");
+                }
+            } else {
+                onChunk("\n\n> Sorry, I encountered an unexpected error. Please try again.");
+            }
         }
     }
     
