@@ -38,30 +38,202 @@ const FormattedMessageContent: React.FC<{ content: string }> = React.memo(({ con
          code({ node, inline, className, children, ...props }: any) {
             const match = /language-(\w+)/.exec(className || '');
             return !inline && match ? (
-                <SyntaxHighlighter
-                    style={syntaxTheme as any}
-                    language={match[1]}
-                    PreTag="div"
-                >
-                    {String(children).replace(/\n$/, '')}
-                </SyntaxHighlighter>
+                <div style={{
+                    margin: '16px 0',
+                    borderRadius: '8px',
+                    overflow: 'hidden',
+                    border: theme === 'dark' ? '1px solid #374151' : '1px solid #e5e7eb'
+                }}>
+                    <SyntaxHighlighter
+                        style={syntaxTheme as any}
+                        language={match[1]}
+                        PreTag="div"
+                        customStyle={{
+                            margin: 0,
+                            padding: '16px',
+                            fontSize: '14px',
+                            lineHeight: '1.5',
+                            background: theme === 'dark' ? '#1f2937' : '#f9fafb'
+                        }}
+                    >
+                        {String(children).replace(/\n$/, '')}
+                    </SyntaxHighlighter>
+                </div>
             ) : (
-                <code className={className} {...props}>
+                <code style={{
+                    backgroundColor: theme === 'dark' ? '#374151' : '#f3f4f6',
+                    color: theme === 'dark' ? '#f9fafb' : '#1f2937',
+                    padding: '2px 6px',
+                    borderRadius: '4px',
+                    fontSize: '13px',
+                    fontFamily: 'Monaco, Consolas, "Courier New", monospace'
+                }} {...props}>
                     {children}
                 </code>
             );
         },
+        p: ({ children }) => (
+            <p style={{
+                margin: '12px 0',
+                lineHeight: '1.6',
+                fontSize: '15px',
+                color: theme === 'dark' ? '#f3f4f6' : '#1f2937'
+            }}>
+                {children}
+            </p>
+        ),
+        h1: ({ children }) => (
+            <h1 style={{
+                fontSize: '24px',
+                fontWeight: '700',
+                margin: '20px 0 12px 0',
+                color: theme === 'dark' ? '#f9fafb' : '#111827',
+                borderBottom: theme === 'dark' ? '2px solid #374151' : '2px solid #e5e7eb',
+                paddingBottom: '8px'
+            }}>
+                {children}
+            </h1>
+        ),
+        h2: ({ children }) => (
+            <h2 style={{
+                fontSize: '20px',
+                fontWeight: '600',
+                margin: '18px 0 10px 0',
+                color: theme === 'dark' ? '#f9fafb' : '#111827'
+            }}>
+                {children}
+            </h2>
+        ),
+        h3: ({ children }) => (
+            <h3 style={{
+                fontSize: '18px',
+                fontWeight: '600',
+                margin: '16px 0 8px 0',
+                color: theme === 'dark' ? '#f9fafb' : '#111827'
+            }}>
+                {children}
+            </h3>
+        ),
+        ul: ({ children }) => (
+            <ul style={{
+                margin: '12px 0',
+                paddingLeft: '20px',
+                listStyle: 'disc'
+            }}>
+                {children}
+            </ul>
+        ),
+        ol: ({ children }) => (
+            <ol style={{
+                margin: '12px 0',
+                paddingLeft: '20px',
+                listStyle: 'decimal'
+            }}>
+                {children}
+            </ol>
+        ),
+        li: ({ children }) => (
+            <li style={{
+                margin: '4px 0',
+                lineHeight: '1.5',
+                color: theme === 'dark' ? '#f3f4f6' : '#374151'
+            }}>
+                {children}
+            </li>
+        ),
+        blockquote: ({ children }) => (
+            <blockquote style={{
+                margin: '16px 0',
+                padding: '12px 16px',
+                borderLeft: theme === 'dark' ? '4px solid #3b82f6' : '4px solid #3b82f6',
+                backgroundColor: theme === 'dark' ? '#1e293b' : '#f0f9ff',
+                borderRadius: '0 6px 6px 0',
+                fontStyle: 'italic'
+            }}>
+                {children}
+            </blockquote>
+        ),
+        table: ({ children }) => (
+            <div style={{ margin: '16px 0', overflowX: 'auto' }}>
+                <table style={{
+                    width: '100%',
+                    borderCollapse: 'collapse',
+                    border: theme === 'dark' ? '1px solid #374151' : '1px solid #e5e7eb',
+                    borderRadius: '6px',
+                    overflow: 'hidden'
+                }}>
+                    {children}
+                </table>
+            </div>
+        ),
+        thead: ({ children }) => (
+            <thead style={{
+                backgroundColor: theme === 'dark' ? '#374151' : '#f9fafb'
+            }}>
+                {children}
+            </thead>
+        ),
+        th: ({ children }) => (
+            <th style={{
+                padding: '12px',
+                textAlign: 'left',
+                fontWeight: '600',
+                color: theme === 'dark' ? '#f9fafb' : '#111827',
+                borderBottom: theme === 'dark' ? '1px solid #4b5563' : '1px solid #d1d5db'
+            }}>
+                {children}
+            </th>
+        ),
+        td: ({ children }) => (
+            <td style={{
+                padding: '12px',
+                borderBottom: theme === 'dark' ? '1px solid #374151' : '1px solid #e5e7eb',
+                color: theme === 'dark' ? '#f3f4f6' : '#374151'
+            }}>
+                {children}
+            </td>
+        ),
+        a: ({ children, href }) => (
+            <a 
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                    color: '#3b82f6',
+                    textDecoration: 'underline',
+                    cursor: 'pointer'
+                }}
+            >
+                {children}
+            </a>
+        ),
+        strong: ({ children }) => (
+            <strong style={{
+                fontWeight: '700',
+                color: theme === 'dark' ? '#f9fafb' : '#111827'
+            }}>
+                {children}
+            </strong>
+        ),
+        em: ({ children }) => (
+            <em style={{
+                fontStyle: 'italic',
+                color: theme === 'dark' ? '#e5e7eb' : '#4b5563'
+            }}>
+                {children}
+            </em>
+        )
     };
 
     return (
-        <div className="prose prose-sm dark:prose-invert max-w-none
-                                prose-p:my-2 
-                                prose-headings:my-3 prose-headings:font-semibold
-                                prose-code:bg-gray-300/70 dark:prose-code:bg-gray-900/70 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded-md
-                                prose-table:w-full prose-table:text-sm prose-thead:border-b dark:prose-thead:border-gray-600 prose-th:p-2 prose-th:font-semibold 
-                                prose-td:p-2 prose-tr:border-b dark:prose-tr:border-gray-700/50
-                                prose-a:text-accent-blue hover:prose-a:underline"
-                                style={{ wordBreak: 'break-word', overflowWrap: 'break-word', minHeight: '1.5rem' }}>
+        <div style={{
+            wordBreak: 'break-word',
+            overflowWrap: 'break-word',
+            minHeight: '1.5rem',
+            fontSize: '15px',
+            lineHeight: '1.6',
+            color: theme === 'dark' ? '#f3f4f6' : '#1f2937'
+        }}>
             <ReactMarkdown
                 remarkPlugins={[
                     [remarkMath, { singleDollarTextMath: true }],
@@ -431,72 +603,131 @@ const ChatModule: React.FC = () => {
 };
 
 const MessageBubble: React.FC<{ message: ChatMessage }> = React.memo(({ message }) => {
+    const { theme } = useTheme();
     const isModel = message.role === 'model';
     
     return (
         <div
-            className={`flex items-start gap-3 max-w-4xl w-full ${isModel ? 'justify-start' : 'ml-auto justify-end'}`}
+            style={{
+                display: 'flex',
+                alignItems: 'flex-start',
+                gap: '12px',
+                maxWidth: '100%',
+                width: '100%',
+                justifyContent: isModel ? 'flex-start' : 'flex-end',
+                marginBottom: '20px'
+            }}
         >
             {isModel && (
-                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-accent-blue to-accent-purple flex items-center justify-center text-white font-bold text-sm shadow-md">
+                <div style={{
+                    flexShrink: 0,
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '50%',
+                    background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: 'white',
+                    fontWeight: 'bold',
+                    fontSize: '12px',
+                    boxShadow: '0 2px 8px rgba(59, 130, 246, 0.3)'
+                }}>
                     AI
                 </div>
             )}
             <div
-                className={`px-4 py-3 rounded-2xl w-fit max-w-full ${
-                    isModel
-                        ? 'bg-gray-200/80 dark:bg-gray-700/50 rounded-tl-none'
-                        : 'bg-accent-blue text-white rounded-br-none'
-                }`}
-                style={{ 
+                style={{
+                    padding: '16px 20px',
+                    borderRadius: isModel ? '20px 20px 20px 4px' : '20px 20px 4px 20px',
+                    maxWidth: isModel ? '85%' : '80%',
+                    width: 'fit-content',
                     wordBreak: 'break-word',
                     overflowWrap: 'break-word',
-                    minHeight: '3rem',
-                    display: 'block'
+                    minHeight: '40px',
+                    display: 'block',
+                    fontSize: '15px',
+                    lineHeight: '1.6',
+                    boxShadow: theme === 'dark' 
+                        ? '0 2px 12px rgba(0, 0, 0, 0.3)' 
+                        : '0 2px 12px rgba(0, 0, 0, 0.1)',
+                    background: isModel
+                        ? (theme === 'dark' ? '#374151' : '#f8fafc')
+                        : 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
+                    color: isModel
+                        ? (theme === 'dark' ? '#f3f4f6' : '#1f2937')
+                        : 'white',
+                    border: isModel && theme === 'light' ? '1px solid #e5e7eb' : 'none'
                 }}
             >
                 <FormattedMessageContent content={message.text} />
                 {message.isLoading && (
-                    <div className="flex items-center mt-2">
-                        <div className="flex space-x-1">
+                    <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        marginTop: '12px',
+                        gap: '8px'
+                    }}>
+                        <div style={{ display: 'flex', gap: '4px' }}>
                             <motion.div
                                 animate={{
-                                    scale: [1, 1.2, 1],
-                                    opacity: [0.5, 1, 0.5],
+                                    scale: [1, 1.3, 1],
+                                    opacity: [0.4, 1, 0.4],
                                 }}
                                 transition={{
-                                    duration: 1.5,
+                                    duration: 1.2,
                                     repeat: Infinity,
                                     delay: 0,
                                 }}
-                                className="w-2 h-2 bg-gray-500 dark:bg-gray-300 rounded-full"
+                                style={{
+                                    width: '6px',
+                                    height: '6px',
+                                    backgroundColor: theme === 'dark' ? '#9ca3af' : '#6b7280',
+                                    borderRadius: '50%'
+                                }}
                             />
                             <motion.div
                                 animate={{
-                                    scale: [1, 1.2, 1],
-                                    opacity: [0.5, 1, 0.5],
+                                    scale: [1, 1.3, 1],
+                                    opacity: [0.4, 1, 0.4],
                                 }}
                                 transition={{
-                                    duration: 1.5,
+                                    duration: 1.2,
                                     repeat: Infinity,
                                     delay: 0.2,
                                 }}
-                                className="w-2 h-2 bg-gray-500 dark:bg-gray-300 rounded-full"
+                                style={{
+                                    width: '6px',
+                                    height: '6px',
+                                    backgroundColor: theme === 'dark' ? '#9ca3af' : '#6b7280',
+                                    borderRadius: '50%'
+                                }}
                             />
                             <motion.div
                                 animate={{
-                                    scale: [1, 1.2, 1],
-                                    opacity: [0.5, 1, 0.5],
+                                    scale: [1, 1.3, 1],
+                                    opacity: [0.4, 1, 0.4],
                                 }}
                                 transition={{
-                                    duration: 1.5,
+                                    duration: 1.2,
                                     repeat: Infinity,
                                     delay: 0.4,
                                 }}
-                                className="w-2 h-2 bg-gray-500 dark:bg-gray-300 rounded-full"
+                                style={{
+                                    width: '6px',
+                                    height: '6px',
+                                    backgroundColor: theme === 'dark' ? '#9ca3af' : '#6b7280',
+                                    borderRadius: '50%'
+                                }}
                             />
                         </div>
-                        <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">Thinking...</span>
+                        <span style={{
+                            fontSize: '12px',
+                            color: theme === 'dark' ? '#9ca3af' : '#6b7280',
+                            fontStyle: 'italic'
+                        }}>
+                            AI is thinking...
+                        </span>
                     </div>
                 )}
             </div>
