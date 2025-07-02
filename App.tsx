@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { ThemeProvider, useTheme } from './hooks/useTheme';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChatBubbleLeftRightIcon, CommandLineIcon, DocumentArrowUpIcon, ChartBarIcon, BookOpenIcon, CpuChipIcon, ClockIcon } from './constants';
+import { ChatBubbleLeftRightIcon, CommandLineIcon, DocumentArrowUpIcon, ChartBarIcon, BookOpenIcon, CpuChipIcon, ClockIcon, ChevronDownIcon } from './constants';
 import ChatModule from './components/modules/ChatModule';
 import CodeInterpreterModule from './components/modules/CodeInterpreterModule';
 import FileAnalysisModule from './components/modules/FileAnalysisModule';
@@ -11,25 +11,66 @@ import ModelSuggesterModule from './components/modules/ModelSuggesterModule';
 import HistoryModule from './components/modules/HistoryModule';
 
 type ModuleType = 'chat' | 'code' | 'upload' | 'viz' | 'learn' | 'model' | 'history';
+type AppMode = 'datascience' | 'neet';
 
-const modules: { id: ModuleType; name: string; icon: React.ReactNode }[] = [
-    { id: 'chat', name: 'AI Chat', icon: <ChatBubbleLeftRightIcon className="w-5 h-5" /> },
-    { id: 'code', name: 'Code Interpreter', icon: <CommandLineIcon className="w-5 h-5" /> },
-    { id: 'upload', name: 'File Analysis', icon: <DocumentArrowUpIcon className="w-5 h-5" /> },
-    { id: 'viz', name: 'Visualization', icon: <ChartBarIcon className="w-5 h-5" /> },
-    { id: 'learn', name: 'Learning Hub', icon: <BookOpenIcon className="w-5 h-5" /> },
-    { id: 'model', name: 'Model Suggester', icon: <CpuChipIcon className="w-5 h-5" /> },
-    { id: 'history', name: 'History', icon: <ClockIcon className="w-5 h-5" /> },
+const allModules: { id: ModuleType; name: string; neetName?: string; icon: React.ReactNode; modes: AppMode[] }[] = [
+    { id: 'chat', name: 'AI Chat', neetName: 'Doubt Expert', icon: <ChatBubbleLeftRightIcon className="w-5 h-5" />, modes: ['datascience', 'neet'] },
+    { id: 'code', name: 'Code Interpreter', icon: <CommandLineIcon className="w-5 h-5" />, modes: ['datascience'] },
+    { id: 'upload', name: 'File Analysis', icon: <DocumentArrowUpIcon className="w-5 h-5" />, modes: ['datascience'] },
+    { id: 'viz', name: 'Visualization', icon: <ChartBarIcon className="w-5 h-5" />, modes: ['datascience'] },
+    { id: 'learn', name: 'Learning Hub', icon: <BookOpenIcon className="w-5 h-5" />, modes: ['datascience', 'neet'] },
+    { id: 'model', name: 'Model Suggester', icon: <CpuChipIcon className="w-5 h-5" />, modes: ['datascience'] },
+    { id: 'history', name: 'History', icon: <ClockIcon className="w-5 h-5" />, modes: ['datascience'] },
 ];
 
 const AppContent: React.FC = () => {
     const { theme, toggleTheme } = useTheme();
     const [activeModule, setActiveModule] = useState<ModuleType>('chat');
+    const [appMode, setAppMode] = useState<AppMode>('datascience');
+    const [showModeDropdown, setShowModeDropdown] = useState(false);
+
+    // Filter modules based on current mode
+    const availableModules = allModules.filter(module => module.modes.includes(appMode));
+
+    // If current module is not available in the new mode, switch to first available
+    React.useEffect(() => {
+        if (!availableModules.find(m => m.id === activeModule)) {
+            setActiveModule(availableModules[0]?.id || 'chat');
+        }
+    }, [appMode, availableModules, activeModule]);
+
+    // Close dropdown when clicking outside
+    React.useEffect(() => {
+        const handleClickOutside = () => {
+            setShowModeDropdown(false);
+        };
+        
+        if (showModeDropdown) {
+            document.addEventListener('click', handleClickOutside);
+            return () => document.removeEventListener('click', handleClickOutside);
+        }
+    }, [showModeDropdown]);
+
+    const handleModeChange = (newMode: AppMode) => {
+        setAppMode(newMode);
+        setShowModeDropdown(false);
+    };
+
+    const getModeDisplayName = (mode: AppMode) => {
+        return mode === 'datascience' ? 'Data Science AI' : 'NEET Expert';
+    };
+
+    const getModuleName = (module: typeof allModules[0]) => {
+        if (appMode === 'neet' && module.neetName) {
+            return module.neetName;
+        }
+        return module.name;
+    };
 
     const renderModule = () => {
         switch (activeModule) {
             case 'chat':
-                return <ChatModule />;
+                return <ChatModule appMode={appMode} />;
             case 'code':
                 return <CodeInterpreterModule />;
             case 'upload':
@@ -37,13 +78,13 @@ const AppContent: React.FC = () => {
             case 'viz':
                 return <VisualizationModule />;
             case 'learn':
-                return <LearningHubModule />;
+                return <LearningHubModule appMode={appMode} />;
             case 'model':
                 return <ModelSuggesterModule />;
             case 'history':
                 return <HistoryModule />;
             default:
-                return <ChatModule />;
+                return <ChatModule appMode={appMode} />;
         }
     };
 
@@ -62,7 +103,7 @@ const AppContent: React.FC = () => {
                 >
                     <div className="p-4 bg-glass-light dark:bg-glass-dark border border-border-light dark:border-border-dark rounded-2xl backdrop-blur-lg shadow-lg h-full flex flex-col justify-between">
                         <div>
-                            <div className="flex items-center gap-3 px-2 mb-8">
+                            <div className="flex items-center gap-3 px-2 mb-6">
                                 <motion.div 
                                     className="w-10 h-10 bg-gradient-to-br from-accent-blue to-accent-purple rounded-full"
                                     animate={{ rotate: 360 }}
@@ -70,8 +111,62 @@ const AppContent: React.FC = () => {
                                 />
                                 <h1 className="text-xl font-bold tracking-tighter">Co-Pilot</h1>
                             </div>
+                            
+                            {/* Mode Selector */}
+                            <div className="relative mb-6 px-2">
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setShowModeDropdown(!showModeDropdown);
+                                    }}
+                                    className="w-full flex items-center justify-between px-3 py-2.5 bg-gray-100 dark:bg-gray-700 rounded-lg text-sm font-medium transition-all duration-300 hover:bg-gray-200 dark:hover:bg-gray-600"
+                                >
+                                    <span>{getModeDisplayName(appMode)}</span>
+                                    <motion.div
+                                        animate={{ rotate: showModeDropdown ? 180 : 0 }}
+                                        transition={{ duration: 0.2 }}
+                                    >
+                                        <ChevronDownIcon className="w-4 h-4" />
+                                    </motion.div>
+                                </button>
+                                
+                                <AnimatePresence>
+                                    {showModeDropdown && (
+                                        <motion.div
+                                            initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                                            exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                                            transition={{ duration: 0.2 }}
+                                            className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg z-50"
+                                            onClick={(e) => e.stopPropagation()}
+                                        >
+                                            <button
+                                                onClick={() => handleModeChange('datascience')}
+                                                className={`w-full px-3 py-2.5 text-left text-sm transition-colors rounded-t-lg ${
+                                                    appMode === 'datascience' 
+                                                        ? 'bg-accent-blue/20 text-accent-blue dark:text-white' 
+                                                        : 'hover:bg-gray-100 dark:hover:bg-gray-700'
+                                                }`}
+                                            >
+                                                Data Science AI
+                                            </button>
+                                            <button
+                                                onClick={() => handleModeChange('neet')}
+                                                className={`w-full px-3 py-2.5 text-left text-sm transition-colors rounded-b-lg ${
+                                                    appMode === 'neet' 
+                                                        ? 'bg-accent-blue/20 text-accent-blue dark:text-white' 
+                                                        : 'hover:bg-gray-100 dark:hover:bg-gray-700'
+                                                }`}
+                                            >
+                                                NEET Expert
+                                            </button>
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+                            </div>
+                            
                             <nav className="flex flex-row md:flex-col gap-2">
-                                {modules.map(module => (
+                                {availableModules.map(module => (
                                     <button
                                         key={module.id}
                                         onClick={() => setActiveModule(module.id)}
@@ -82,7 +177,7 @@ const AppContent: React.FC = () => {
                                         }`}
                                     >
                                         {module.icon}
-                                        <span className="hidden md:inline">{module.name}</span>
+                                        <span className="hidden md:inline">{getModuleName(module)}</span>
                                     </button>
                                 ))}
                             </nav>

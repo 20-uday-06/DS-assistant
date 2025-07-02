@@ -4,6 +4,9 @@ import { geminiService } from '../../services/geminiService';
 import { sessionManager } from '../../services/sessionManager';
 import { ChatMessage } from '../../types';
 import { PaperAirplaneIcon, StopIcon } from '../../constants';
+
+// App mode type
+type AppMode = 'datascience' | 'neet';
 import { useTheme } from '../../hooks/useTheme';
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
@@ -295,13 +298,67 @@ const FormattedMessageContent: React.FC<{ content: string }> = React.memo(({ con
     );
 });
 
+const NEET_LEARNING_PROMPT = `You are a legendary NEET educator - think of yourself as the most inspiring Physics, Chemistry, and Biology teacher who has helped thousands of students crack NEET. Your mission is to make students FEEL the concepts deeply and develop unshakeable understanding.
 
-const LearningHubModule: React.FC = () => {
+When explaining ANY NEET topic, you must:
+
+🔬 **DEEP CONCEPTUAL UNDERSTANDING:**
+- Start from the very fundamentals and build up systematically
+- Give students the "FEELING" of Physics - make them visualize and experience concepts
+- Use NCERT language and examples but go beyond to create deeper insights
+- Explain WHY nature behaves this way, not just HOW formulas work
+- Connect concepts across Physics, Chemistry, and Biology wherever relevant
+
+🌟 **REAL-WORLD CONNECTION & VISUALIZATION:**
+- Use abundant real-life examples that students can see, touch, and experience
+- For Physics: Make students FEEL forces, see waves, understand energy flow
+- For Chemistry: Help them visualize molecular interactions, bond formations
+- For Biology: Connect processes to their own body functions and life around them
+- Use analogies that stick in memory forever
+
+🧠 **NEET-FOCUSED APPROACH:**
+- Address exactly what NEET tests and how concepts are twisted in questions
+- Point out NEET tricks, common traps, and elimination techniques
+- Share memory devices, mnemonics, and shortcuts specific to NEET
+- Mention which NCERT chapters and specific pages to focus on
+- Highlight high-weightage topics and question patterns
+
+💡 **STEP-BY-STEP PROBLEM SOLVING:**
+- Break down complex problems into simple, logical steps
+- Show multiple approaches to solve the same problem
+- Explain when to use which method in NEET context
+- Teach dimensional analysis, order of magnitude estimation
+- Focus on speed and accuracy techniques for NEET
+
+🎯 **INTERACTIVE LEARNING:**
+- Ask thought-provoking questions to test understanding
+- Create "What if?" scenarios to deepen insight
+- Guide students to derive formulas rather than just memorize
+- Encourage pattern recognition in NEET questions
+
+📚 **COMPREHENSIVE COVERAGE:**
+- Use proper LaTeX for all mathematical expressions: $E = mc^2$, $$\\frac{d}{dx}f(x)$$
+- Include relevant diagrams descriptions and figure references
+- Connect to NCERT examples and end-of-chapter questions
+- Provide summary boxes for quick revision
+
+🔥 **END WITH NEET PRACTICE:**
+After explaining the concept thoroughly, ALWAYS provide:
+- 3-5 NEET-style multiple choice questions with detailed explanations
+- Questions should cover different difficulty levels and question types
+- Include proper distractors and explain why wrong options are incorrect
+- Reference actual NEET patterns and previous year trends
+
+Remember: Make students FALL IN LOVE with science through deep understanding. Your goal is to create future doctors who understand science at its core!`;
+
+const LearningHubModule: React.FC<{ appMode?: 'datascience' | 'neet' }> = ({ appMode = 'datascience' }) => {
     const [messages, setMessages] = useState<ChatMessage[]>([
         {
             id: 'initial-message',
             role: 'model',
-            text: "Welcome to the Learning Hub! What data science concept would you like to explore today? Ask me about anything from p-values to transformers.",
+            text: appMode === 'neet' 
+                ? "Welcome to the NEET Learning Hub! What Physics, Chemistry, or Biology concept would you like to master today? I'll help you understand it deeply and prepare for NEET!"
+                : "Welcome to the Learning Hub! What data science concept would you like to explore today? Ask me about anything from p-values to transformers.",
         }
     ]);
     const [input, setInput] = useState('');
@@ -428,7 +485,7 @@ const LearningHubModule: React.FC = () => {
                         );
                     }
                 },
-                LEARNING_PROMPT
+                appMode === 'neet' ? NEET_LEARNING_PROMPT : LEARNING_PROMPT
             );
             
             isStreamActive = false;
@@ -499,7 +556,7 @@ const LearningHubModule: React.FC = () => {
             <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                 <AnimatePresence>
                     {messages.map(msg => (
-                        <MessageBubble key={msg.id} message={msg} />
+                        <MessageBubble key={msg.id} message={msg} appMode={appMode} />
                     ))}
                 </AnimatePresence>
                 <div ref={messagesEndRef} />
@@ -548,7 +605,7 @@ const LearningHubModule: React.FC = () => {
     );
 };
 
-const MessageBubble: React.FC<{ message: ChatMessage }> = React.memo(({ message }) => {
+const MessageBubble: React.FC<{ message: ChatMessage; appMode?: AppMode }> = React.memo(({ message, appMode = 'datascience' }) => {
     const { theme } = useTheme();
     const isModel = message.role === 'model';
     
@@ -570,16 +627,20 @@ const MessageBubble: React.FC<{ message: ChatMessage }> = React.memo(({ message 
                     width: '32px',
                     height: '32px',
                     borderRadius: '50%',
-                    background: 'linear-gradient(135deg, #8b5cf6, #ec4899)',
+                    background: appMode === 'neet' 
+                        ? 'linear-gradient(135deg, #10b981, #16a34a)' 
+                        : 'linear-gradient(135deg, #8b5cf6, #ec4899)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     color: 'white',
                     fontWeight: 'bold',
                     fontSize: '12px',
-                    boxShadow: '0 2px 8px rgba(139, 92, 246, 0.3)'
+                    boxShadow: appMode === 'neet'
+                        ? '0 2px 8px rgba(16, 185, 129, 0.3)'
+                        : '0 2px 8px rgba(139, 92, 246, 0.3)'
                 }}>
-                    📚
+                    {appMode === 'neet' ? '📚' : '📚'}
                 </div>
             )}
             <div
@@ -599,7 +660,9 @@ const MessageBubble: React.FC<{ message: ChatMessage }> = React.memo(({ message 
                         : '0 2px 12px rgba(0, 0, 0, 0.1)',
                     background: isModel
                         ? (theme === 'dark' ? '#374151' : '#f8fafc')
-                        : 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
+                        : appMode === 'neet'
+                            ? 'linear-gradient(135deg, #10b981, #059669)'
+                            : 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
                     color: isModel
                         ? (theme === 'dark' ? '#f3f4f6' : '#1f2937')
                         : 'white',

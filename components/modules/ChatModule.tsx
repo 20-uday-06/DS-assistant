@@ -4,6 +4,9 @@ import { geminiService } from '../../services/geminiService';
 import { sessionManager } from '../../services/sessionManager';
 import { ChatMessage } from '../../types';
 import { PaperAirplaneIcon, StopIcon } from '../../constants';
+
+// App mode type
+type AppMode = 'datascience' | 'neet';
 import { useTheme } from '../../hooks/useTheme';
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
@@ -26,6 +29,87 @@ interface Analytics {
     topTopics: Array<{ topic: string; count: number }>;
     averageQueriesPerSession: string;
 }
+
+// Prompts for different modes
+const DATA_SCIENCE_PROMPT = `You are an expert Data Science Co-Pilot with deep knowledge in Python, SQL, statistics, machine learning, and data analysis. Your primary role is to resolve user doubts completely in a single response - no follow-up questions should be needed.
+
+When answering ANY doubt or question:
+
+🎯 **COMPLETE DOUBT RESOLUTION:**
+- Provide comprehensive, definitive answers that fully satisfy the user's query
+- Anticipate and address related questions they might have
+- Clear up any potential confusion or misconceptions
+- Give multiple perspectives or approaches when relevant
+
+💡 **PRACTICAL SOLUTIONS:**
+- Include working code examples with clear explanations
+- Provide step-by-step implementation guides
+- Show real-world applications and use cases
+- Mention best practices, common pitfalls, and optimization tips
+
+🔧 **TECHNICAL DEPTH:**
+- Explain the underlying concepts and theory
+- Compare different methods/algorithms when applicable
+- Discuss performance considerations and trade-offs
+- Include relevant libraries, tools, and resources
+
+📊 **CONTEXT & EXAMPLES:**
+- Use concrete examples with actual data scenarios
+- Show before/after comparisons where helpful
+- Include visualization suggestions when relevant
+- Connect to broader data science workflows
+
+Your goal: Make the user feel completely confident and knowledgeable about the topic after your response. They should walk away thinking "Now I totally get it!" rather than having more questions.
+
+**IMPORTANT**: At the end of every response, always recommend 2-3 related topics that the user might want to explore next. Format these as:
+
+📚 **Related Topics You Might Like:**
+- Topic 1: Brief description
+- Topic 2: Brief description  
+- Topic 3: Brief description
+
+This helps users discover new areas and continue their learning journey.`;
+
+const NEET_DOUBT_EXPERT_PROMPT = `You are a Class 11th and 12th NCERT expert specializing in Physics, Chemistry, and Biology for NEET preparation. You have mastered every concept, formula, and problem-solving technique from NCERT textbooks and NEET syllabus. Your primary goal is to resolve student doubts completely in a single response.
+
+Your expertise includes:
+🔬 **PHYSICS**: Mechanics, Thermodynamics, Waves, Optics, Electricity & Magnetism, Modern Physics
+🧪 **CHEMISTRY**: Physical Chemistry, Organic Chemistry, Inorganic Chemistry, Chemical Bonding
+🧬 **BIOLOGY**: Botany (Plant Kingdom, Photosynthesis, Plant Physiology), Zoology (Animal Kingdom, Human Physiology, Genetics, Evolution)
+
+When resolving ANY doubt:
+
+🎯 **COMPLETE DOUBT RESOLUTION:**
+- Answer the question so thoroughly that no follow-up is needed
+- Anticipate related confusion points and clarify them proactively
+- Address the "why" behind every concept, not just the "what"
+- Clear up common misconceptions students have about the topic
+
+📚 **NCERT MASTERY:**
+- Use exact NCERT language and terminology
+- Reference specific chapters, diagrams, and page numbers when helpful
+- Connect to NCERT examples and previous concepts
+- Build from basics to advanced understanding systematically
+
+🧠 **LEARNING TECHNIQUES:**
+- Provide memory tricks, mnemonics, and shortcuts
+- Share visualization techniques for complex concepts
+- Give step-by-step problem-solving approaches
+- Include comparison tables for similar concepts
+
+🎯 **NEET-SPECIFIC GUIDANCE:**
+- Point out exactly how this appears in NEET questions
+- Mention common NEET mistakes and how to avoid them
+- Share time-saving techniques for exam scenarios
+- Connect to previous year NEET question patterns
+
+💡 **REAL-WORLD CONNECTION:**
+- Use daily life examples students can relate to
+- Explain practical applications and significance
+- Make abstract concepts tangible and memorable
+- Use analogies that stick in memory
+
+Your goal: Make the student feel completely confident about the concept and ready to tackle any NEET question on this topic. They should think "Crystal clear now!" after your response.`;
 
 const FormattedMessageContent: React.FC<{ content: string }> = React.memo(({ content }) => {
     const { theme } = useTheme();
@@ -254,12 +338,14 @@ const FormattedMessageContent: React.FC<{ content: string }> = React.memo(({ con
     );
 });
 
-const ChatModule: React.FC = () => {
+const ChatModule: React.FC<{ appMode?: 'datascience' | 'neet' }> = ({ appMode = 'datascience' }) => {
     const [messages, setMessages] = useState<ChatMessage[]>([
         {
             id: 'initial-message',
             role: 'model',
-            text: "Hello! I'm your Data Science Co-Pilot. How can I assist you today? Feel free to ask about Python, SQL, statistics, or machine learning.",
+            text: appMode === 'neet' 
+                ? "Hello! I'm your NEET Doubt Expert. Ask me any Physics, Chemistry, or Biology doubt - I'll resolve it completely so you're crystal clear and NEET-ready!"
+                : "Hello! I'm your Data Science Doubt Resolver. Ask me any data science question - I'll give you a comprehensive answer that leaves no confusion behind!",
         }
     ]);
     const [input, setInput] = useState('');
@@ -349,7 +435,9 @@ const ChatModule: React.FC = () => {
                 {
                     id: 'initial-message',
                     role: 'model',
-                    text: "Hello! I'm your Data Science Co-Pilot. How can I assist you today? Feel free to ask about Python, SQL, statistics, or machine learning.",
+                    text: appMode === 'neet' 
+                        ? "Hello! I'm your NEET Doubt Expert. Ask me any Physics, Chemistry, or Biology doubt - I'll resolve it completely so you're crystal clear and NEET-ready!"
+                        : "Hello! I'm your Data Science Doubt Resolver. Ask me any data science question - I'll give you a comprehensive answer that leaves no confusion behind!",
                 }
             ]);
             setInput('');
@@ -424,7 +512,8 @@ const ChatModule: React.FC = () => {
                             )
                         );
                     }
-                }
+                },
+                appMode === 'neet' ? NEET_DOUBT_EXPERT_PROMPT : DATA_SCIENCE_PROMPT
             );
             
             isStreamActive = false;
@@ -469,8 +558,15 @@ const ChatModule: React.FC = () => {
             <header className="p-4 border-b border-border-light dark:border-border-dark flex-shrink-0">
                 <div className="flex items-center justify-between">
                     <div>
-                        <h2 className="text-xl font-bold">AI Chat Assistant</h2>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">Your expert data science partner</p>
+                        <h2 className="text-xl font-bold">
+                            {appMode === 'neet' ? 'Doubt Expert' : 'AI Chat Assistant'}
+                        </h2>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                            {appMode === 'neet' 
+                                ? 'Complete doubt resolution for NEET success' 
+                                : 'Comprehensive answers that satisfy all your doubts'
+                            }
+                        </p>
                     </div>
                     <button
                         onClick={toggleGlobalHistory}
@@ -548,7 +644,7 @@ const ChatModule: React.FC = () => {
                     <>
                         <AnimatePresence mode="popLayout">
                             {messages.map((msg) => (
-                                <MessageBubble key={msg.id} message={msg} />
+                                <MessageBubble key={msg.id} message={msg} appMode={appMode} />
                             ))}
                         </AnimatePresence>
                         <div ref={messagesEndRef} />
@@ -568,7 +664,10 @@ const ChatModule: React.FC = () => {
                                 handleSubmit();
                             }
                         }}
-                        placeholder="Ask about PostgreSQL, Python, stats, or upload a dataset..."
+                        placeholder={appMode === 'neet' 
+                            ? "Ask about Physics, Chemistry, Biology concepts..." 
+                            : "Ask about PostgreSQL, Python, stats, or upload a dataset..."
+                        }
                         className="w-full min-h-[3rem] max-h-48 p-3 pr-20 bg-gray-200/50 dark:bg-brand-dark/50 border border-border-light dark:border-border-dark rounded-xl focus:ring-2 focus:ring-accent-blue focus:outline-none resize-none transition-all duration-300 overflow-y-auto leading-normal"
                         rows={1}
                         disabled={isLoading}
@@ -602,7 +701,7 @@ const ChatModule: React.FC = () => {
     );
 };
 
-const MessageBubble: React.FC<{ message: ChatMessage }> = React.memo(({ message }) => {
+const MessageBubble: React.FC<{ message: ChatMessage; appMode: AppMode }> = React.memo(({ message, appMode }) => {
     const { theme } = useTheme();
     const isModel = message.role === 'model';
     
@@ -624,16 +723,20 @@ const MessageBubble: React.FC<{ message: ChatMessage }> = React.memo(({ message 
                     width: '32px',
                     height: '32px',
                     borderRadius: '50%',
-                    background: 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
+                    background: appMode === 'neet' 
+                        ? 'linear-gradient(135deg, #10b981, #059669)' 
+                        : 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     color: 'white',
                     fontWeight: 'bold',
                     fontSize: '12px',
-                    boxShadow: '0 2px 8px rgba(59, 130, 246, 0.3)'
+                    boxShadow: appMode === 'neet'
+                        ? '0 2px 8px rgba(16, 185, 129, 0.3)'
+                        : '0 2px 8px rgba(59, 130, 246, 0.3)'
                 }}>
-                    AI
+                    {appMode === 'neet' ? '🎓' : 'AI'}
                 </div>
             )}
             <div
@@ -653,7 +756,9 @@ const MessageBubble: React.FC<{ message: ChatMessage }> = React.memo(({ message 
                         : '0 2px 12px rgba(0, 0, 0, 0.1)',
                     background: isModel
                         ? (theme === 'dark' ? '#374151' : '#f8fafc')
-                        : 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
+                        : appMode === 'neet'
+                            ? 'linear-gradient(135deg, #10b981, #059669)'
+                            : 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
                     color: isModel
                         ? (theme === 'dark' ? '#f3f4f6' : '#1f2937')
                         : 'white',
