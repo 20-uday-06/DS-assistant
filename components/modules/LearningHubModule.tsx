@@ -45,6 +45,20 @@ When explaining ANY topic, you must:
 - Connect theory to practical data science workflows
 - Mention relevant tools, libraries, and industry practices
 
+🐍 **PYTHON IMPLEMENTATION (MANDATORY):**
+- For EVERY concept, statistical test, algorithm, or technique explained, you MUST include Python code examples
+- Show the core syntax and main functions used (scipy.stats, sklearn, pandas, numpy, etc.)
+- Skip import statements - focus on the essential syntax and function calls
+- Use concise, practical examples that demonstrate the concept
+- Include both basic usage and key parameters
+- Show how to interpret results when applicable
+- Format code blocks properly with language specification
+
+For example, when explaining Z-test, include Python code like:
+- stats.norm.cdf(z_score) for p-value calculation
+- stats.norm.ppf(0.025) for critical values
+- Use proper code block formatting
+
 🎯 **STRUCTURE & CLARITY:**
 - Use clear headings and organized sections
 - Include bullet points and numbered lists for clarity
@@ -52,7 +66,7 @@ When explaining ANY topic, you must:
 - Use code examples with detailed explanations
 - Format everything in beautiful, readable markdown
 
-Remember: This is LEARNING HUB - go deep, be thorough, leave no stone unturned. Your goal is to create comprehensive educational content that could serve as a masterclass on the topic.`;
+Remember: This is LEARNING HUB - go deep, be thorough, leave no stone unturned. Your goal is to create comprehensive educational content that could serve as a masterclass on the topic. ALWAYS include Python implementations for practical application.`;
 
 const FormattedMessageContent: React.FC<{ content: string }> = React.memo(({ content }) => {
     const { theme } = useTheme();
