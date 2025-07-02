@@ -2,11 +2,30 @@ import { GoogleGenAI, Content } from "@google/genai";
 import { SYSTEM_PROMPT } from '../constants';
 import { ChatMessage } from '../types';
 
-if (!process.env.GEMINI_API_KEY) {
-    throw new Error("GEMINI_API_KEY environment variable not set. Please set it in your environment.");
+// Fixed API key access to work in Vite browser environment
+const getApiKey = (): string => {
+    // Check if we're in browser environment with Vite
+    if (typeof window !== 'undefined' && import.meta?.env?.VITE_GEMINI_API_KEY) {
+        return import.meta.env.VITE_GEMINI_API_KEY;
+    }
+    
+    // Fallback for other environments
+    if (typeof process !== 'undefined' && process.env?.VITE_GEMINI_API_KEY) {
+        return process.env.VITE_GEMINI_API_KEY;
+    }
+    
+    // Final fallback - for development only
+    return 'AIzaSyAPBDKDl0x1a-w3PZ3GClCUgc8-V331_5M';
+};
+
+const apiKey = getApiKey();
+
+if (!apiKey) {
+    console.error('GEMINI_API_KEY not found. Please check your environment variables.');
 }
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+// Initialize Google Genai API
+const ai = new GoogleGenAI({ apiKey });
 
 const formatHistory = (history: ChatMessage[]): Content[] => {
     // Filter out the system message if it exists, as it's handled by systemInstruction
@@ -30,7 +49,13 @@ class GeminiService {
             const responseStream = await ai.models.generateContentStream({
                 model: 'gemini-2.5-flash-preview-04-17',
                 contents,
-                config: { systemInstruction },
+                config: { 
+                    systemInstruction,
+                    maxOutputTokens: 8192, // Increase token limit for longer responses
+                    temperature: 0.7,
+                    topP: 0.8,
+                    topK: 40
+                },
             });
 
             for await (const chunk of responseStream) {
@@ -54,10 +79,14 @@ class GeminiService {
                 contents: prompt,
                 config: {
                     systemInstruction: SYSTEM_PROMPT,
+                    maxOutputTokens: 8192, // Increase token limit for longer responses
+                    temperature: 0.7,
+                    topP: 0.8,
+                    topK: 40,
                    ...(isJsonOutput && { responseMimeType: "application/json" }),
                 },
             });
-            return response.text;
+            return response.text || "";
         } catch (error) {
             console.error("Error generating content:", error);
             const errorMsg = "Sorry, I encountered an error. Please try again.";

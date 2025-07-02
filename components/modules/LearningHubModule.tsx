@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { geminiService } from '../../services/geminiService';
+import { sessionManager } from '../../services/sessionManager';
 import { ChatMessage } from '../../types';
 import { PaperAirplaneIcon, StopIcon, BookOpenIcon } from '../../constants';
 import { useTheme } from '../../hooks/useTheme';
@@ -12,14 +13,46 @@ import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus, prism } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import type { Components } from 'react-markdown';
 
-const LEARNING_PROMPT = `You are an expert educator and data scientist specializing in AI, Machine Learning, Statistics, and Probability. Your goal is to explain complex concepts in a clear, intuitive, and engaging way. Use analogies, step-by-step breakdowns, real-world examples, and well-formatted markdown (including LaTeX for math) to make your explanations easy to understand for a fellow data scientist who wants to deepen their knowledge.
+const LEARNING_PROMPT = `You are a world-renowned expert educator and researcher in Data Science, AI, Machine Learning, Statistics, and Probability - think of yourself as a professor at MIT or Stanford with decades of teaching and research experience. Your mission is to provide extremely detailed, comprehensive educational explanations.
 
-For mathematical content, always use proper LaTeX formatting:
-- Use $inline math$ for inline formulas and $$display math$$ for display formulas
-- Use proper LaTeX notation: \\mu for μ, \\sigma for σ, \\bar{x} for x̄, H_0 for H₀, H_1 for H₁
-- Format statistical formulas clearly: Z = \\frac{\\bar{x} - \\mu_0}{\\sigma/\\sqrt{n}}
-- Use \\frac{numerator}{denominator} for fractions, \\sqrt{expression} for square roots
-- Always wrap mathematical expressions in LaTeX delimiters ($ or $$)`;
+When explaining ANY topic, you must:
+
+📚 **DEPTH & COMPREHENSIVENESS:**
+- Start with fundamental concepts and build up systematically
+- Explain the "why" behind every concept, not just the "what" or "how"
+- Cover theoretical foundations, practical applications, and real-world implications
+- Include historical context and evolution of the concept when relevant
+- Address common misconceptions and clarify subtle distinctions
+
+🧠 **PEDAGOGICAL APPROACH:**
+- Use multiple explanations (intuitive, mathematical, visual metaphors)
+- Provide concrete examples with step-by-step walkthrough
+- Include analogies from everyday life to make complex concepts relatable
+- Build from simple cases to complex scenarios progressively
+- Ask rhetorical questions to guide thinking process
+
+🔬 **MATHEMATICAL RIGOR:**
+- Always provide mathematical formulations with clear explanations
+- Show derivations for key formulas when educational value is high
+- Use proper LaTeX formatting: $inline math$ and $$display math$$
+- Proper notation: \\mu, \\sigma, \\bar{x}, H_0, H_1, \\frac{a}{b}, \\sqrt{x}, etc.
+- Connect mathematical concepts to intuitive understanding
+
+💡 **PRACTICAL CONNECTIONS:**
+- Explain when and why to use different approaches
+- Discuss advantages, disadvantages, and trade-offs
+- Provide implementation insights and gotchas
+- Connect theory to practical data science workflows
+- Mention relevant tools, libraries, and industry practices
+
+🎯 **STRUCTURE & CLARITY:**
+- Use clear headings and organized sections
+- Include bullet points and numbered lists for clarity
+- Provide summary sections for complex topics
+- Use code examples with detailed explanations
+- Format everything in beautiful, readable markdown
+
+Remember: This is LEARNING HUB - go deep, be thorough, leave no stone unturned. Your goal is to create comprehensive educational content that could serve as a masterclass on the topic.`;
 
 const FormattedMessageContent: React.FC<{ content: string }> = React.memo(({ content }) => {
     const { theme } = useTheme();
@@ -44,7 +77,7 @@ const FormattedMessageContent: React.FC<{ content: string }> = React.memo(({ con
     };
 
     return (
-        <div className="prose prose-sm dark:prose-invert max-w-none 
+        <div className="prose prose-sm dark:prose-invert max-w-none chat-message-content 
                                 prose-p:my-2 
                                 prose-headings:my-3 prose-headings:font-semibold
                                 prose-code:bg-gray-300/70 dark:prose-code:bg-gray-900/70 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded-md
@@ -79,7 +112,6 @@ const LearningHubModule: React.FC = () => {
     const messagesEndRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
     const currentMessageRef = useRef<string>('');
-    const streamingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
     
     useEffect(() => {
         setMessages([
@@ -95,15 +127,6 @@ const LearningHubModule: React.FC = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages]);
 
-    // Cleanup timeout on unmount
-    useEffect(() => {
-        return () => {
-            if (streamingTimeoutRef.current) {
-                clearTimeout(streamingTimeoutRef.current);
-            }
-        };
-    }, []);
-
     const handleSubmit = async (e?: React.FormEvent) => {
         if(e) e.preventDefault();
         if (!input.trim() || isLoading) return;
@@ -118,8 +141,16 @@ const LearningHubModule: React.FC = () => {
                 }
             ]);
             setInput('');
+            sessionManager.startNewSession(); // Start new session for history
             return;
         }
+
+        // Save user query to history
+        const userQueryText = input.trim();
+        const summary = `Learning: ${userQueryText.length > 80 ? userQueryText.substring(0, 80) + '...' : userQueryText}`;
+        sessionManager.saveUserQuery(userQueryText, summary).catch(error => {
+            console.error('Failed to save user query to history:', error);
+        });
 
         const newUserMessage: ChatMessage = { id: Date.now().toString(), role: 'user', text: input };
         const updatedMessages = [...messages, newUserMessage];
@@ -129,11 +160,14 @@ const LearningHubModule: React.FC = () => {
 
         const modelMessageId = (Date.now() + 1).toString();
         setMessages(prev => [...prev, { id: modelMessageId, role: 'model', text: '', isLoading: true }]);
-
+        
         // Reset the current message ref
         currentMessageRef.current = '';
 
         try {
+            let streamCompleted = false;
+            let chunkCounter = 0;
+            
             await geminiService.streamChat(
                 updatedMessages,
                 (chunk) => {
@@ -142,26 +176,42 @@ const LearningHubModule: React.FC = () => {
                     
                     // Update the ref with the complete message
                     currentMessageRef.current += cleanChunk;
+                    chunkCounter++;
                     
-                    // Clear any existing timeout
-                    if (streamingTimeoutRef.current) {
-                        clearTimeout(streamingTimeoutRef.current);
-                    }
-                    
-                    // Debounce the UI update to prevent too many re-renders
-                    streamingTimeoutRef.current = setTimeout(() => {
+                    // Throttle UI updates for better performance with very long educational responses
+                    // Update every 5 chunks for Learning Hub (since responses are typically longer)
+                    if (chunkCounter % 5 === 0 || cleanChunk.length > 100) {
                         setMessages(prev =>
                             prev.map(msg =>
                                 msg.id === modelMessageId ? { 
                                     ...msg, 
-                                    text: currentMessageRef.current 
+                                    text: currentMessageRef.current,
+                                    isLoading: true // Keep loading state until stream completes
                                 } : msg
                             )
                         );
-                    }, 50); // Update UI every 50ms instead of on every chunk
+                    }
                 },
                 LEARNING_PROMPT
             );
+            
+            streamCompleted = true;
+            
+            // Always do a final update to ensure we have the complete response
+            if (streamCompleted) {
+                // Use setTimeout to ensure this update happens after any other state updates
+                setTimeout(() => {
+                    setMessages(prev =>
+                        prev.map(msg =>
+                            msg.id === modelMessageId ? { 
+                                ...msg, 
+                                text: currentMessageRef.current,
+                                isLoading: false 
+                            } : msg
+                        )
+                    );
+                }, 0);
+            }
         } catch (error) {
             console.error("Error in Learning Hub:", error);
             setMessages(prev =>
@@ -175,23 +225,6 @@ const LearningHubModule: React.FC = () => {
             );
         } finally {
             setIsLoading(false);
-            
-            // Clear any pending timeout
-            if (streamingTimeoutRef.current) {
-                clearTimeout(streamingTimeoutRef.current);
-            }
-            
-            // Ensure final message update
-            setMessages(prev =>
-                prev.map(msg =>
-                    msg.id === modelMessageId ? { 
-                        ...msg, 
-                        text: currentMessageRef.current,
-                        isLoading: false 
-                    } : msg
-                )
-            );
-            
             currentMessageRef.current = ''; // Reset ref
             inputRef.current?.focus();
         }
@@ -204,7 +237,7 @@ const LearningHubModule: React.FC = () => {
                 <p className="text-sm text-gray-500 dark:text-gray-400">Deepen your data science knowledge</p>
             </header>
 
-            <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6">
+            <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                 <AnimatePresence>
                     {messages.map(msg => (
                         <MessageBubble key={msg.id} message={msg} />
@@ -245,28 +278,29 @@ const MessageBubble: React.FC<{ message: ChatMessage }> = ({ message }) => {
     
     return (
         <motion.div
-            layout
+            layout={false}
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.3, ease: 'easeOut' }}
-            className={`flex items-start gap-3 max-w-4xl w-full ${isModel ? 'justify-start' : 'ml-auto justify-end'}`}
+            className={`flex items-start gap-3 max-w-4xl w-full message-bubble ${isModel ? 'justify-start' : 'ml-auto justify-end'}`}
         >
             {isModel && (
                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-accent-purple to-pink-500 flex items-center justify-center text-white font-bold text-sm shadow-md">
                     <BookOpenIcon className="w-4 h-4" />
                 </div>
             )}
-            <motion.div
-                layout
-                initial={isModel ? { width: 'auto', minHeight: '3rem' } : false}
-                animate={isModel ? { width: 'auto', minHeight: 'auto' } : false}
-                transition={{ duration: 0.3, ease: 'easeInOut' }}
-                className={`px-4 py-3 rounded-2xl w-fit max-w-full ${
+            <div
+                className={`px-4 py-3 rounded-2xl w-fit max-w-full min-h-[3rem] ${
                     isModel
                         ? 'bg-gray-200/80 dark:bg-gray-700/50 rounded-tl-none'
                         : 'bg-accent-blue text-white rounded-br-none'
                 }`}
+                style={{ 
+                    wordBreak: 'break-word',
+                    overflowWrap: 'break-word',
+                    minHeight: isModel ? '3rem' : 'auto'
+                }}
             >
                 <FormattedMessageContent content={message.text} />
                 {message.isLoading && (
@@ -316,7 +350,7 @@ const MessageBubble: React.FC<{ message: ChatMessage }> = ({ message }) => {
                         <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">Thinking...</span>
                     </motion.div>
                 )}
-            </motion.div>
+            </div>
         </motion.div>
     );
 };

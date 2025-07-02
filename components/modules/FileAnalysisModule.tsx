@@ -98,10 +98,26 @@ User Request: "${prompt}"
 Provide a detailed analysis based on the user's request.
 `;
         try {
+            let accumulatedResponse = '';
+            let lastUpdateTime = 0;
+            const UPDATE_THROTTLE = 150; // Throttle updates to prevent UI collapse
+            
              await geminiService.streamChat(
                 [{ id: '1', role: 'user', text: fullPrompt }],
-                (chunk) => setResponse(prev => prev + chunk)
+                (chunk) => {
+                    accumulatedResponse += chunk;
+                    
+                    // Throttle UI updates to prevent performance issues with long responses
+                    const now = Date.now();
+                    if (now - lastUpdateTime >= UPDATE_THROTTLE) {
+                        setResponse(accumulatedResponse);
+                        lastUpdateTime = now;
+                    }
+                }
             );
+            
+            // Ensure final state is set after streaming completes
+            setResponse(accumulatedResponse);
         } catch (e) {
             setError("An error occurred during analysis.");
         } finally {
@@ -134,7 +150,7 @@ Provide a detailed analysis based on the user's request.
                             value={prompt}
                             onChange={(e) => setPrompt(e.target.value)}
                             placeholder="What would you like to know about this file?"
-                            className="w-full h-24 p-3 bg-gray-200/50 dark:bg-brand-dark/50 border border-border-light dark:border-border-dark rounded-xl focus:ring-2 focus:ring-accent-blue focus:outline-none resize-none transition-all duration-300"
+                            className="w-full h-24 p-3 bg-gray-200/50 dark:bg-brand-dark/50 border border-border-light dark:border-border-dark rounded-xl focus:ring-2 focus:ring-accent-blue focus:outline-none resize-none transition-all duration-300 overflow-y-auto leading-normal"
                         />
                         <motion.button
                             onClick={handleSubmit}
@@ -148,9 +164,9 @@ Provide a detailed analysis based on the user's request.
                 )}
 
                 {(response || isLoading) && (
-                    <div className="mt-4">
+                    <div className="mt-4 module-container">
                         <h3 className="text-lg font-semibold mb-2">AI Analysis</h3>
-                        <div className="bg-gray-200/20 dark:bg-brand-dark/20 p-4 rounded-lg min-h-[100px] border border-border-light dark:border-border-dark">
+                        <div className="response-container streaming-response min-h-[100px]">
                            <FormattedResponse content={response} />
                            {isLoading && <span className="inline-block w-2 h-4 bg-gray-500 dark:bg-gray-300 animate-pulse ml-1 rounded-sm" />}
                         </div>

@@ -1,3 +1,46 @@
+/* Custom scrollbar styles - applied to all textarea elements */
+textarea {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
+}
+
+textarea::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+textarea::-webkit-scrollbar-thumb {
+  background-color: rgba(156, 163, 175, 0.5);
+  border-radius: 3px;
+}
+
+textarea::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(156, 163, 175, 0.7);
+}
+
+.dark textarea {
+  scrollbar-color: rgba(75, 85, 99, 0.5) transparent;
+}
+
+.dark textarea::-webkit-scrollbar-thumb {
+  background-color: rgba(75, 85, 99, 0.5);
+}
+
+.dark textarea::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(75, 85, 99, 0.7);
+}
+
+textarea::-webkit-scrollbar-track {
+  background-color: transparent;
+}
+
+/* Fix for textarea auto-resize and better UX */
+textarea {
+  field-sizing: content;
+  min-height: 2.5rem;
+  line-height: 1.5;
+}
+
 /* Custom styles for better mathematical formula rendering */
 
 /* Ensure KaTeX formulas are properly spaced and visible */
@@ -57,4 +100,128 @@
 /* Ensure math doesn't break layouts */
 .katex-html {
   overflow: visible;
+}
+
+/* Response containers for modules with long content */
+.response-container {
+  max-height: 600px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 16px;
+  background: var(--panel-bg);
+  line-height: 1.6;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+
+/* Scrollbar styling for response containers */
+.response-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.response-container::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+
+.response-container::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 4px;
+}
+
+.response-container::-webkit-scrollbar-thumb:hover {
+  background: var(--primary);
+}
+
+/* Prevent layout shift during streaming */
+.streaming-response {
+  min-height: 40px;
+  contain: layout style;
+}
+
+/* Better handling of long text content */
+.module-content {
+  word-break: break-word;
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+
+/* Ensure proper text flow in all modules */
+.module-container {
+  overflow: hidden;
+  word-wrap: break-word;
+}
+
+/* Hide scrollbars globally but keep functionality */
+*::-webkit-scrollbar {
+  width: 0px;
+  background: transparent;
+}
+
+* {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+}
+
+/* Chat message styling to prevent collapse */
+.chat-message-content {
+  min-height: 1.5rem;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  contain: layout style;
+  white-space: pre-wrap;
+  overflow: hidden;
+  display: block !important;
+  width: 100%;
+  height: auto;
+}
+
+/* Stable message bubbles with forced dimensions */
+.message-bubble {
+  min-height: 3rem !important;
+  contain: layout;
+  will-change: auto;
+  overflow: hidden;
+  display: flex !important;
+  width: 100%;
+}
+
+/* Force message containers to maintain size */
+.message-bubble > div:last-child {
+  min-height: 3rem !important;
+  flex: 1;
+  display: block !important;
+}
+
+/* Ensure prose content doesn't break layout */
+.prose {
+  overflow: hidden;
+  max-width: none !important;
+}
+
+.prose p, .prose div, .prose span {
+  word-break: break-word;
+  overflow-wrap: break-word;
+  max-width: 100%;
+}
+
+/* Better handling for code blocks in messages */
+.prose pre {
+  overflow-x: auto;
+  max-width: 100%;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+/* Improve table responsiveness in messages */
+.prose table {
+  overflow-x: auto;
+  display: block;
+  white-space: nowrap;
+}
+
+.prose tbody {
+  display: table;
+  width: 100%;
 }

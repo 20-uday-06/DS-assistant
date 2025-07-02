@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { geminiService } from '../../services/geminiService';
+import { sessionManager } from '../../services/sessionManager';
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
@@ -65,26 +66,77 @@ const ModelSuggesterModule: React.FC = () => {
         setIsLoading(true);
         setResponse('');
         const prompt = `
-As a senior data scientist, I need a recommendation for a machine learning model. My project details are:
+You are a seasoned ML consultant with 15+ years of experience building production ML systems across diverse industries. A client has approached you for model recommendations.
+
+**Client Requirements:**
 - **Problem Type**: ${problemType}
 - **Dataset Size**: ${datasetSize}
-- **Primary Data Type / Features**: ${dataType}
+- **Primary Data Type**: ${dataType}
 
-Based on this, suggest 3 suitable machine learning models. For each model, provide:
-1.  A brief explanation of why it's a good fit for this scenario.
-2.  Recommended preprocessing steps.
-3.  Key hyperparameters to tune and their typical range or starting values.
-4.  Potential drawbacks or things to watch out for.
+Based on your extensive experience, provide **3 carefully selected model recommendations** that would work well for this scenario. For each model, structure your response as follows:
 
-Present this as a well-structured markdown report with clear headings for each suggested model.
-`;
+## Model [X]: [Model Name]
+
+### Why This Model Fits
+- Explain the specific characteristics that make this model suitable
+- Reference your "experience" with similar projects
+
+### Preprocessing Pipeline
+- Detailed preprocessing steps specific to this data type and problem
+- Common gotchas and best practices you've learned
+
+### Hyperparameter Strategy
+- **Critical hyperparameters** to tune first
+- **Recommended starting ranges** based on dataset size
+- **Tuning methodology** (grid search, random search, Bayesian optimization)
+
+### Production Considerations
+- **Potential challenges** you've encountered with this model type
+- **Performance expectations** (training time, inference speed, resource requirements)
+- **When this model might fail** and warning signs to watch for
+
+### Implementation Tips
+- Recommended libraries/frameworks
+- Code architecture suggestions
+- Monitoring and maintenance considerations
+
+---
+
+**Overall Recommendation:** Provide a final paragraph summarizing which model you'd start with and why, based on the specific combination of problem type, data size, and data type.
+
+Use your experience-backed insights throughout - mention specific scenarios where you've seen these models succeed or fail.`;
+
+        // Save user query to history
+        const userQueryText = `Model suggestion for ${problemType} problem with ${datasetSize} ${dataType} data`;
+        const summary = `Model Suggester: ${problemType} (${datasetSize})`;
+        sessionManager.saveUserQuery(userQueryText, summary).catch(error => {
+            console.error('Failed to save user query to history:', error);
+        });
+
         try {
+            let accumulatedResponse = '';
+            let lastUpdateTime = 0;
+            const UPDATE_THROTTLE = 150; // Throttle updates to prevent UI collapse
+            
             await geminiService.streamChat(
                 [{ id: '1', role: 'user', text: prompt }],
-                (chunk) => setResponse(prev => prev + chunk)
+                (chunk) => {
+                    accumulatedResponse += chunk;
+                    
+                    // Throttle UI updates to prevent performance issues with long responses
+                    const now = Date.now();
+                    if (now - lastUpdateTime >= UPDATE_THROTTLE) {
+                        setResponse(accumulatedResponse);
+                        lastUpdateTime = now;
+                    }
+                }
             );
+            
+            // Ensure final state is set after streaming completes
+            setResponse(accumulatedResponse);
         } catch (error) {
-            setResponse("An error occurred while generating suggestions.");
+            console.error("Error generating suggestions:", error);
+            setResponse("An error occurred while generating suggestions. Please try again.");
         } finally {
             setIsLoading(false);
         }
@@ -138,9 +190,9 @@ Present this as a well-structured markdown report with clear headings for each s
                     </motion.button>
                 </div>
                 {/* Output Panel */}
-                <div className="flex-1 p-4 md:p-6 overflow-y-auto">
+                <div className="flex-1 p-4 md:p-6 overflow-y-auto module-container">
                      <h3 className="text-lg font-semibold mb-2">AI Recommendations</h3>
-                     <div className="bg-gray-200/20 dark:bg-brand-dark/20 p-4 rounded-lg min-h-[200px] border border-border-light dark:border-border-dark">
+                     <div className="response-container streaming-response min-h-[200px]">
                         {isLoading && !response && <div className="text-center text-gray-500">Generating recommendations based on your input...</div>}
                         {response ? <FormattedResponse content={response} /> : !isLoading && <div className="text-center text-gray-400 dark:text-gray-500">Your model suggestions will appear here.</div>}
                         {isLoading && <span className="inline-block w-2 h-4 bg-gray-500 dark:bg-gray-300 animate-pulse ml-1 rounded-sm" />}

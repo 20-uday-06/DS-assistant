@@ -1,15 +1,16 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { ThemeProvider, useTheme } from './hooks/useTheme';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChatBubbleLeftRightIcon, CommandLineIcon, DocumentArrowUpIcon, ChartBarIcon, BookOpenIcon, CpuChipIcon } from './constants';
+import { ChatBubbleLeftRightIcon, CommandLineIcon, DocumentArrowUpIcon, ChartBarIcon, BookOpenIcon, CpuChipIcon, ClockIcon } from './constants';
 import ChatModule from './components/modules/ChatModule';
 import CodeInterpreterModule from './components/modules/CodeInterpreterModule';
 import FileAnalysisModule from './components/modules/FileAnalysisModule';
 import VisualizationModule from './components/modules/VisualizationModule';
 import LearningHubModule from './components/modules/LearningHubModule';
 import ModelSuggesterModule from './components/modules/ModelSuggesterModule';
+import HistoryModule from './components/modules/HistoryModule';
 
-type ModuleType = 'chat' | 'code' | 'upload' | 'viz' | 'learn' | 'model';
+type ModuleType = 'chat' | 'code' | 'upload' | 'viz' | 'learn' | 'model' | 'history';
 
 const modules: { id: ModuleType; name: string; icon: React.ReactNode }[] = [
     { id: 'chat', name: 'AI Chat', icon: <ChatBubbleLeftRightIcon className="w-5 h-5" /> },
@@ -18,6 +19,7 @@ const modules: { id: ModuleType; name: string; icon: React.ReactNode }[] = [
     { id: 'viz', name: 'Visualization', icon: <ChartBarIcon className="w-5 h-5" /> },
     { id: 'learn', name: 'Learning Hub', icon: <BookOpenIcon className="w-5 h-5" /> },
     { id: 'model', name: 'Model Suggester', icon: <CpuChipIcon className="w-5 h-5" /> },
+    { id: 'history', name: 'History', icon: <ClockIcon className="w-5 h-5" /> },
 ];
 
 const AppContent: React.FC = () => {
@@ -38,6 +40,8 @@ const AppContent: React.FC = () => {
                 return <LearningHubModule />;
             case 'model':
                 return <ModelSuggesterModule />;
+            case 'history':
+                return <HistoryModule />;
             default:
                 return <ChatModule />;
         }
