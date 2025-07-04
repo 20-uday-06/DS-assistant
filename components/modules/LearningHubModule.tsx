@@ -38,7 +38,7 @@ When explaining ANY topic, you must:
 - Always provide mathematical formulations with clear explanations
 - Show derivations for key formulas when educational value is high
 - Use proper LaTeX formatting: $inline math$ and $$display math$$
-- Proper notation: \\mu, \\sigma, \\bar{x}, H_0, H_1, \\frac{a}{b}, \\sqrt{x}, etc.
+- Proper notation: $\mu$, $\sigma$, $\bar{x}$, $H_0$, $H_1$, $\frac{a}{b}$, $\sqrt{x}$, etc.
 - Connect mathematical concepts to intuitive understanding
 
 💡 **PRACTICAL CONNECTIONS:**
@@ -337,7 +337,7 @@ When explaining ANY NEET topic, you must:
 - Encourage pattern recognition in NEET questions
 
 📚 **COMPREHENSIVE COVERAGE:**
-- Use proper LaTeX for all mathematical expressions: $E = mc^2$, $$\\frac{d}{dx}f(x)$$
+- Use proper LaTeX for all mathematical expressions: $E = mc^2$, $$\frac{d}{dx}f(x)$$
 - Include relevant diagrams descriptions and figure references
 - Connect to NCERT examples and end-of-chapter questions
 - Provide summary boxes for quick revision
@@ -391,7 +391,7 @@ When explaining ANY JEE topic, you must:
 - Encourage pattern recognition in JEE questions and mathematical structures
 
 📚 **COMPREHENSIVE COVERAGE:**
-- Use proper LaTeX for all mathematical expressions: $E = mc^2$, $$\\frac{d}{dx}f(x)$$, $$\\int_{a}^{b} f(x) dx$$
+- Use proper LaTeX for all mathematical expressions: $E = mc^2$, $$\frac{d}{dx}f(x)$$, $$\int_{a}^{b} f(x) dx$$
 - Include relevant diagrams descriptions and figure references
 - Connect to NCERT examples and advanced reference materials
 - Provide summary boxes with key formulas and concepts for quick revision

@@ -20,7 +20,7 @@ Answer questions directly and comprehensively, providing exactly what the user n
 
 🔢 **FOR MATHEMATICAL CONTENT:**
 - Use LaTeX syntax: $inline math$ and $$display math$$
-- Proper notation: \\mu, \\sigma, \\bar{x}, H_0, H_1, \\frac{a}{b}, \\sqrt{x}, etc.
+- Proper notation: $\mu$, $\sigma$, $\bar{x}$, $H_0$, $H_1$, $\frac{a}{b}$, $\sqrt{x}$, etc.
 - Explain formulas conceptually, don't just show math
 
 💻 **FOR CODE:**
