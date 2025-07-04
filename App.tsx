@@ -11,14 +11,14 @@ import ModelSuggesterModule from './components/modules/ModelSuggesterModule';
 import HistoryModule from './components/modules/HistoryModule';
 
 type ModuleType = 'chat' | 'code' | 'upload' | 'viz' | 'learn' | 'model' | 'history';
-type AppMode = 'datascience' | 'neet';
+type AppMode = 'datascience' | 'neet' | 'jee';
 
-const allModules: { id: ModuleType; name: string; neetName?: string; icon: React.ReactNode; modes: AppMode[] }[] = [
-    { id: 'chat', name: 'AI Chat', neetName: 'Doubt Expert', icon: <ChatBubbleLeftRightIcon className="w-5 h-5" />, modes: ['datascience', 'neet'] },
+const allModules: { id: ModuleType; name: string; neetName?: string; jeeName?: string; icon: React.ReactNode; modes: AppMode[] }[] = [
+    { id: 'chat', name: 'AI Chat', neetName: 'Doubt Expert', jeeName: 'JEE Mentor', icon: <ChatBubbleLeftRightIcon className="w-5 h-5" />, modes: ['datascience', 'neet', 'jee'] },
     { id: 'code', name: 'Code Interpreter', icon: <CommandLineIcon className="w-5 h-5" />, modes: ['datascience'] },
     { id: 'upload', name: 'File Analysis', icon: <DocumentArrowUpIcon className="w-5 h-5" />, modes: ['datascience'] },
     { id: 'viz', name: 'Visualization', icon: <ChartBarIcon className="w-5 h-5" />, modes: ['datascience'] },
-    { id: 'learn', name: 'Learning Hub', icon: <BookOpenIcon className="w-5 h-5" />, modes: ['datascience', 'neet'] },
+    { id: 'learn', name: 'Learning Hub', icon: <BookOpenIcon className="w-5 h-5" />, modes: ['datascience', 'neet', 'jee'] },
     { id: 'model', name: 'Model Suggester', icon: <CpuChipIcon className="w-5 h-5" />, modes: ['datascience'] },
     { id: 'history', name: 'History', icon: <ClockIcon className="w-5 h-5" />, modes: ['datascience'] },
 ];
@@ -57,12 +57,17 @@ const AppContent: React.FC = () => {
     };
 
     const getModeDisplayName = (mode: AppMode) => {
-        return mode === 'datascience' ? 'Data Science AI' : 'NEET Expert';
+        if (mode === 'datascience') return 'Data Science AI';
+        if (mode === 'neet') return 'NEET Expert';
+        return 'JEE Expert';
     };
 
     const getModuleName = (module: typeof allModules[0]) => {
         if (appMode === 'neet' && module.neetName) {
             return module.neetName;
+        }
+        if (appMode === 'jee' && module.jeeName) {
+            return module.jeeName;
         }
         return module.name;
     };
@@ -152,13 +157,23 @@ const AppContent: React.FC = () => {
                                             </button>
                                             <button
                                                 onClick={() => handleModeChange('neet')}
-                                                className={`w-full px-3 py-2.5 text-left text-sm transition-colors rounded-b-lg ${
+                                                className={`w-full px-3 py-2.5 text-left text-sm transition-colors ${
                                                     appMode === 'neet' 
                                                         ? 'bg-accent-blue/20 text-accent-blue dark:text-white' 
                                                         : 'hover:bg-gray-100 dark:hover:bg-gray-700'
                                                 }`}
                                             >
                                                 NEET Expert
+                                            </button>
+                                            <button
+                                                onClick={() => handleModeChange('jee')}
+                                                className={`w-full px-3 py-2.5 text-left text-sm transition-colors rounded-b-lg ${
+                                                    appMode === 'jee' 
+                                                        ? 'bg-accent-blue/20 text-accent-blue dark:text-white' 
+                                                        : 'hover:bg-gray-100 dark:hover:bg-gray-700'
+                                                }`}
+                                            >
+                                                JEE Expert
                                             </button>
                                         </motion.div>
                                     )}

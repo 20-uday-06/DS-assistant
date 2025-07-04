@@ -6,7 +6,7 @@ import { ChatMessage } from '../../types';
 import { PaperAirplaneIcon, StopIcon } from '../../constants';
 
 // App mode type
-type AppMode = 'datascience' | 'neet';
+type AppMode = 'datascience' | 'neet' | 'jee';
 import { useTheme } from '../../hooks/useTheme';
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
@@ -351,13 +351,70 @@ After explaining the concept thoroughly, ALWAYS provide:
 
 Remember: Make students FALL IN LOVE with science through deep understanding. Your goal is to create future doctors who understand science at its core!`;
 
-const LearningHubModule: React.FC<{ appMode?: 'datascience' | 'neet' }> = ({ appMode = 'datascience' }) => {
+const JEE_LEARNING_PROMPT = `You are a legendary JEE educator - think of yourself as the most inspiring Physics, Chemistry, and Mathematics teacher who has helped thousands of students crack JEE Main and Advanced. Your mission is to make students FEEL the concepts deeply and develop unshakeable mathematical and scientific understanding.
+
+When explaining ANY JEE topic, you must:
+
+🔬 **DEEP CONCEPTUAL UNDERSTANDING:**
+- Start from the very fundamentals and build up systematically with mathematical rigor
+- Give students the "FEELING" of Physics - make them visualize and experience mathematical beauty
+- Use NCERT language and examples but go beyond to create deeper insights
+- Explain WHY nature follows mathematical laws, not just HOW formulas work
+- Connect concepts across Physics, Chemistry, and Mathematics wherever relevant
+- Show the mathematical elegance behind physical phenomena
+
+🌟 **REAL-WORLD CONNECTION & VISUALIZATION:**
+- Use abundant real-life examples that students can see, touch, and experience
+- For Physics: Make students FEEL forces, see waves, understand energy flow through calculus
+- For Chemistry: Help them visualize molecular interactions, thermodynamics, and kinetics
+- For Mathematics: Connect abstract concepts to geometric and physical interpretations
+- Use analogies that stick in memory forever and build mathematical intuition
+
+🧠 **JEE-FOCUSED APPROACH:**
+- Address exactly what JEE Main and Advanced test and how concepts are twisted in questions
+- Point out JEE tricks, common traps, and elimination techniques for both objective and subjective questions
+- Share mathematical shortcuts, elegant methods, and time-saving techniques specific to JEE
+- Mention which NCERT chapters and reference books to focus on
+- Highlight high-weightage topics and question patterns from both JEE Main and Advanced
+
+💡 **STEP-BY-STEP PROBLEM SOLVING:**
+- Break down complex problems into simple, logical mathematical steps
+- Show multiple approaches to solve the same problem (algebraic, geometric, calculus-based)
+- Explain when to use which method in JEE context
+- Teach dimensional analysis, order of magnitude estimation, and approximation techniques
+- Focus on speed and accuracy techniques for JEE Main and rigor for JEE Advanced
+
+🎯 **INTERACTIVE LEARNING:**
+- Ask thought-provoking questions to test mathematical understanding
+- Create "What if?" scenarios to deepen insight
+- Guide students to derive formulas rather than just memorize
+- Encourage pattern recognition in JEE questions and mathematical structures
+
+📚 **COMPREHENSIVE COVERAGE:**
+- Use proper LaTeX for all mathematical expressions: $E = mc^2$, $$\\frac{d}{dx}f(x)$$, $$\\int_{a}^{b} f(x) dx$$
+- Include relevant diagrams descriptions and figure references
+- Connect to NCERT examples and advanced reference materials
+- Provide summary boxes with key formulas and concepts for quick revision
+
+🔥 **END WITH JEE PRACTICE:**
+After explaining the concept thoroughly, ALWAYS provide:
+- 3-5 JEE-style questions (mix of Main and Advanced difficulty)
+- Include both multiple choice and numerical answer type questions
+- Questions should cover different aspects and application levels
+- Include proper distractors and explain why wrong options are incorrect
+- Reference actual JEE patterns and previous year trends from both Main and Advanced
+
+Remember: Make students FALL IN LOVE with science and mathematics through deep understanding. Your goal is to create future engineers who understand science and math at their core!`;
+
+const LearningHubModule: React.FC<{ appMode?: 'datascience' | 'neet' | 'jee' }> = ({ appMode = 'datascience' }) => {
     const [messages, setMessages] = useState<ChatMessage[]>([
         {
             id: 'initial-message',
             role: 'model',
             text: appMode === 'neet' 
                 ? "Welcome to the NEET Learning Hub! What Physics, Chemistry, or Biology concept would you like to master today? I'll help you understand it deeply and prepare for NEET!"
+                : appMode === 'jee'
+                ? "Welcome to the JEE Learning Hub! What Physics, Chemistry, or Mathematics concept would you like to master today? I'll help you understand it deeply and prepare for JEE Main & Advanced!"
                 : "Welcome to the Learning Hub! What data science concept would you like to explore today? Ask me about anything from p-values to transformers.",
         }
     ]);
@@ -485,7 +542,9 @@ const LearningHubModule: React.FC<{ appMode?: 'datascience' | 'neet' }> = ({ app
                         );
                     }
                 },
-                appMode === 'neet' ? NEET_LEARNING_PROMPT : LEARNING_PROMPT
+                appMode === 'neet' ? NEET_LEARNING_PROMPT : 
+                appMode === 'jee' ? JEE_LEARNING_PROMPT : 
+                LEARNING_PROMPT
             );
             
             isStreamActive = false;
@@ -629,6 +688,8 @@ const MessageBubble: React.FC<{ message: ChatMessage; appMode?: AppMode }> = Rea
                     borderRadius: '50%',
                     background: appMode === 'neet' 
                         ? 'linear-gradient(135deg, #10b981, #16a34a)' 
+                        : appMode === 'jee'
+                        ? 'linear-gradient(135deg, #f97316, #ea580c)'
                         : 'linear-gradient(135deg, #8b5cf6, #ec4899)',
                     display: 'flex',
                     alignItems: 'center',
@@ -638,9 +699,11 @@ const MessageBubble: React.FC<{ message: ChatMessage; appMode?: AppMode }> = Rea
                     fontSize: '12px',
                     boxShadow: appMode === 'neet'
                         ? '0 2px 8px rgba(16, 185, 129, 0.3)'
+                        : appMode === 'jee'
+                        ? '0 2px 8px rgba(249, 115, 22, 0.3)'
                         : '0 2px 8px rgba(139, 92, 246, 0.3)'
                 }}>
-                    {appMode === 'neet' ? '📚' : '📚'}
+                    {appMode === 'neet' ? '📚' : appMode === 'jee' ? '🔬' : '📚'}
                 </div>
             )}
             <div
@@ -662,6 +725,8 @@ const MessageBubble: React.FC<{ message: ChatMessage; appMode?: AppMode }> = Rea
                         ? (theme === 'dark' ? '#374151' : '#f8fafc')
                         : appMode === 'neet'
                             ? 'linear-gradient(135deg, #10b981, #059669)'
+                            : appMode === 'jee'
+                            ? 'linear-gradient(135deg, #f97316, #ea580c)'
                             : 'linear-gradient(135deg, #8b5cf6, #7c3aed)',
                     color: isModel
                         ? (theme === 'dark' ? '#f3f4f6' : '#1f2937')

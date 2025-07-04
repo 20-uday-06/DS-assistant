@@ -6,7 +6,7 @@ import { ChatMessage } from '../../types';
 import { PaperAirplaneIcon, StopIcon } from '../../constants';
 
 // App mode type
-type AppMode = 'datascience' | 'neet';
+type AppMode = 'datascience' | 'neet' | 'jee';
 import { useTheme } from '../../hooks/useTheme';
 import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
@@ -103,6 +103,46 @@ const NEET_DOUBT_EXPERT_PROMPT = `You are a Class 11th and 12th NCERT expert spe
 - Include comparison tables for similar concepts
 
 Your goal: Give NEET students EXACTLY what they need - comprehensive understanding for broad concepts, direct answers for specific queries, always keeping NEET success in mind.`;
+
+const JEE_DOUBT_EXPERT_PROMPT = `You are a Class 11th and 12th expert specializing in Physics, Chemistry, and Mathematics for JEE Main and Advanced preparation. You provide the PERFECT response based on the question type.
+
+🎯 **RESPONSE STRATEGY - MATCH THE QUESTION TYPE:**
+
+**For BROAD/CONCEPTUAL questions** (e.g., "explain integration", "what is entropy", "how does induction work"):
+- Provide comprehensive explanations with mathematical rigor
+- Include theory, derivations, and mathematical proofs where applicable
+- Cover all aspects: definition, physical significance, applications, limitations
+- Use mathematical visualization and geometric interpretation
+- Connect to JEE exam patterns and question types (both Main and Advanced)
+- Reference NCERT chapters and advanced concepts
+
+**For SPECIFIC/DIRECT questions** (e.g., "formula for acceleration", "what is derivative of sin x", "which reagent is used for this reaction"):
+- Give DIRECT, precise answers immediately
+- No unnecessary explanations or background
+- State the exact fact, formula, or information requested
+- Be concise and crystal clear
+- If it's a formula, just give the formula. If it's a definition, state it directly.
+
+**For NUMERICAL/PROBLEM questions**:
+- Show step-by-step solution with mathematical precision
+- Use multiple approaches when applicable (algebraic, geometric, calculus)
+- Point out common mistakes and conceptual traps
+- Include proper units, significant figures, and mathematical notation
+
+🎯 **JEE-SPECIFIC APPROACH:**
+- Use exact mathematical terminology and notation
+- Reference specific chapters when helpful
+- Mention how concepts appear in JEE Main and Advanced questions
+- Include problem-solving strategies and shortcuts
+- Connect to previous year JEE patterns and difficulty levels
+
+🧠 **LEARNING TECHNIQUES:**
+- Use mathematical analogies and geometric visualization
+- Provide derivation techniques and mathematical insights
+- Share problem-solving strategies and time management tips
+- Include comparison tables for similar concepts and formulas
+
+Your goal: Give JEE students EXACTLY what they need - comprehensive understanding for broad concepts, direct answers for specific queries, always keeping JEE success in mind.`;
 
 const FormattedMessageContent: React.FC<{ content: string }> = React.memo(({ content }) => {
     const { theme } = useTheme();
@@ -331,13 +371,15 @@ const FormattedMessageContent: React.FC<{ content: string }> = React.memo(({ con
     );
 });
 
-const ChatModule: React.FC<{ appMode?: 'datascience' | 'neet' }> = ({ appMode = 'datascience' }) => {
+const ChatModule: React.FC<{ appMode?: 'datascience' | 'neet' | 'jee' }> = ({ appMode = 'datascience' }) => {
     const [messages, setMessages] = useState<ChatMessage[]>([
         {
             id: 'initial-message',
             role: 'model',
             text: appMode === 'neet' 
                 ? "Hello! I'm your NEET Doubt Expert. Ask me any Physics, Chemistry, or Biology doubt - I'll resolve it completely so you're crystal clear and NEET-ready!"
+                : appMode === 'jee'
+                ? "Hello! I'm your JEE Doubt Expert. Ask me any Physics, Chemistry, or Mathematics doubt - I'll resolve it completely so you're crystal clear and JEE-ready!"
                 : "Hello! I'm your Data Science Doubt Resolver. Ask me any data science question - I'll give you a comprehensive answer that leaves no confusion behind!",
         }
     ]);
@@ -430,6 +472,8 @@ const ChatModule: React.FC<{ appMode?: 'datascience' | 'neet' }> = ({ appMode = 
                     role: 'model',
                     text: appMode === 'neet' 
                         ? "Hello! I'm your NEET Doubt Expert. Ask me any Physics, Chemistry, or Biology doubt - I'll resolve it completely so you're crystal clear and NEET-ready!"
+                        : appMode === 'jee'
+                        ? "Hello! I'm your JEE Doubt Expert. Ask me any Physics, Chemistry, or Mathematics doubt - I'll resolve it completely so you're crystal clear and JEE-ready!"
                         : "Hello! I'm your Data Science Doubt Resolver. Ask me any data science question - I'll give you a comprehensive answer that leaves no confusion behind!",
                 }
             ]);
@@ -506,7 +550,9 @@ const ChatModule: React.FC<{ appMode?: 'datascience' | 'neet' }> = ({ appMode = 
                         );
                     }
                 },
-                appMode === 'neet' ? NEET_DOUBT_EXPERT_PROMPT : DATA_SCIENCE_PROMPT
+                appMode === 'neet' ? NEET_DOUBT_EXPERT_PROMPT : 
+                appMode === 'jee' ? JEE_DOUBT_EXPERT_PROMPT : 
+                DATA_SCIENCE_PROMPT
             );
             
             isStreamActive = false;
@@ -552,11 +598,15 @@ const ChatModule: React.FC<{ appMode?: 'datascience' | 'neet' }> = ({ appMode = 
                 <div className="flex items-center justify-between">
                     <div>
                         <h2 className="text-xl font-bold">
-                            {appMode === 'neet' ? 'Doubt Expert' : 'AI Chat Assistant'}
+                            {appMode === 'neet' ? 'Doubt Expert' : 
+                             appMode === 'jee' ? 'Doubt Expert' : 
+                             'AI Chat Assistant'}
                         </h2>
                         <p className="text-sm text-gray-500 dark:text-gray-400">
                             {appMode === 'neet' 
                                 ? 'Complete doubt resolution for NEET success' 
+                                : appMode === 'jee'
+                                ? 'Complete doubt resolution for JEE success'
                                 : 'Comprehensive answers that satisfy all your doubts'
                             }
                         </p>
@@ -718,6 +768,8 @@ const MessageBubble: React.FC<{ message: ChatMessage; appMode: AppMode }> = Reac
                     borderRadius: '50%',
                     background: appMode === 'neet' 
                         ? 'linear-gradient(135deg, #10b981, #059669)' 
+                        : appMode === 'jee'
+                        ? 'linear-gradient(135deg, #f97316, #ea580c)'
                         : 'linear-gradient(135deg, #3b82f6, #8b5cf6)',
                     display: 'flex',
                     alignItems: 'center',
@@ -727,9 +779,11 @@ const MessageBubble: React.FC<{ message: ChatMessage; appMode: AppMode }> = Reac
                     fontSize: '12px',
                     boxShadow: appMode === 'neet'
                         ? '0 2px 8px rgba(16, 185, 129, 0.3)'
+                        : appMode === 'jee'
+                        ? '0 2px 8px rgba(249, 115, 22, 0.3)'
                         : '0 2px 8px rgba(59, 130, 246, 0.3)'
                 }}>
-                    {appMode === 'neet' ? '🎓' : 'AI'}
+                    {appMode === 'neet' ? '🎓' : appMode === 'jee' ? '🔬' : 'AI'}
                 </div>
             )}
             <div
@@ -751,6 +805,8 @@ const MessageBubble: React.FC<{ message: ChatMessage; appMode: AppMode }> = Reac
                         ? (theme === 'dark' ? '#374151' : '#f8fafc')
                         : appMode === 'neet'
                             ? 'linear-gradient(135deg, #10b981, #059669)'
+                            : appMode === 'jee'
+                            ? 'linear-gradient(135deg, #f97316, #ea580c)'
                             : 'linear-gradient(135deg, #3b82f6, #1d4ed8)',
                     color: isModel
                         ? (theme === 'dark' ? '#f3f4f6' : '#1f2937')
