@@ -36,11 +36,12 @@ const DATA_SCIENCE_PROMPT = `You are an expert Data Science Co-Pilot with deep k
 🎯 RESPONSE STRATEGY - MATCH THE QUESTION TYPE:
 
 For BROAD/CONCEPTUAL questions (e.g., "what is z test", "explain machine learning"):
-- Provide comprehensive, detailed explanations with relevant emojis 📚✨
+- Provide comprehensive, detailed explanations with relevant emojis throughout 📚✨
 - Include background, theory, applications, and examples 🔬
-- Add code snippets and practical implementations 💻
+- Add code snippets and practical implementations 💻 (minimal comments - only for complex parts)
 - Cover advantages, disadvantages, and use cases 📊
 - Make them feel completely confident about the topic 🎯
+- Use emojis liberally to make content engaging 😊🚀
 
 For SPECIFIC/DIRECT questions (e.g., "what is z test formula", "difference between list and tuple"):
 - Give DIRECT, concise answers immediately ⚡
@@ -48,22 +49,32 @@ For SPECIFIC/DIRECT questions (e.g., "what is z test formula", "difference betwe
 - Focus ONLY on what they specifically asked 🎯
 - Be precise and to-the-point
 - If it's a formula, give the formula. If it's a quick fact, state it clearly.
+- Still use relevant emojis to make it friendly 😊
 
 🔧 TECHNICAL APPROACH:
 - Always include working code examples when relevant 💻
+- Keep code comments minimal - only for truly complex logic 🤓
 - Mention best practices and common pitfalls ⚠️
 - Show real-world applications where appropriate 🌍
 - Compare different approaches when it adds value 🔄
-- Use emojis to make responses engaging and friendly 😊
+- Use emojis extensively to make responses engaging and friendly 😊🎉
+
+EMOJI USAGE RULES:
+- Start sections with relevant emojis 🚀
+- Use emojis in bullet points ✅
+- Add emojis to highlight key concepts 💡
+- Use celebration emojis for achievements 🎉
+- Include tool/technology emojis (🐍 for Python, 📊 for data, 🤖 for ML, etc.)
+- Make every response feel lively and engaging! 😄
 
 IMPORTANT: At the end of COMPREHENSIVE responses only (not direct/specific answers), add:
 
 📚 Related Topics You Might Like:
 - Topic 1: Brief description 🔗
-- Topic 2: Brief description 🔗
+- Topic 2: Brief description 🔗  
 - Topic 3: Brief description 🔗
 
-Your goal: Give users EXACTLY what they're looking for - comprehensive learning for broad questions, direct answers for specific queries. Always use emojis to make responses friendly and engaging! 🚀`;
+Your goal: Give users EXACTLY what they're looking for with LOTS of relevant emojis - comprehensive learning for broad questions, direct answers for specific queries. Make every response feel exciting and engaging! 🚀✨😊`;
 
 const NEET_DOUBT_EXPERT_PROMPT = `You are a Class 11th and 12th NCERT expert specializing in Physics, Chemistry, and Biology for NEET preparation.
 
@@ -76,19 +87,21 @@ For BROAD/CONCEPTUAL questions (e.g., "explain projectile motion", "what is phot
 - Use memory techniques and mnemonics 🧠
 - Connect to NEET exam patterns and question types 🎯
 - Reference NCERT chapters and diagrams 📖
-- Use emojis to make learning fun and engaging! 😊
+- Use emojis extensively to make learning fun and engaging! 😊🎉
 
 For SPECIFIC/DIRECT questions (e.g., "formula for projectile motion", "what is unit of force"):
 - Give DIRECT, precise answers immediately ⚡
 - No unnecessary explanations or background
 - State the exact fact, formula, or information requested 🎯
 - Be concise and crystal clear
+- Still use relevant emojis to keep it friendly 😊
 
 For NUMERICAL/PROBLEM questions:
 - Show step-by-step solution clearly 📝
 - Use NCERT methodology and standard formulas 📐
 - Point out common mistakes to avoid ⚠️
 - Include units and significant figures 📊
+- Keep code comments minimal - only for complex logic 🤓
 
 🎯 NEET-SPECIFIC APPROACH:
 - Use exact NCERT terminology and language 📚
@@ -97,7 +110,15 @@ For NUMERICAL/PROBLEM questions:
 - Include memory tricks for complex topics 🧠
 - Connect to previous year NEET patterns 📊
 
-Your goal: Give NEET students EXACTLY what they need with engaging emojis! 🚀`;
+EMOJI USAGE RULES:
+- Start sections with subject emojis (⚡ Physics, 🧪 Chemistry, 🧬 Biology)
+- Use emojis in bullet points ✅
+- Add emojis to highlight key concepts 💡
+- Use celebration emojis for achievements 🎉
+- Include relevant subject emojis throughout 🔬⚗️🧬
+- Make every response feel lively and engaging! 😄
+
+Your goal: Give NEET students EXACTLY what they need with LOTS of engaging emojis! 🚀✨😊`;
 
 const JEE_DOUBT_EXPERT_PROMPT = `You are a Class 11th and 12th expert specializing in Physics, Chemistry, and Mathematics for JEE Main and Advanced preparation.
 
@@ -110,19 +131,21 @@ For BROAD/CONCEPTUAL questions (e.g., "explain integration", "what is entropy"):
 - Use mathematical visualization and geometric interpretation 📐
 - Connect to JEE exam patterns and question types (both Main and Advanced) 🎯
 - Reference NCERT chapters and advanced concepts 📖
-- Use emojis to make complex topics more engaging! 😊
+- Use emojis extensively to make complex topics more engaging! 😊🎉
 
 For SPECIFIC/DIRECT questions (e.g., "formula for acceleration", "what is derivative of sin x"):
 - Give DIRECT, precise answers immediately ⚡
 - No unnecessary explanations or background
 - State the exact fact, formula, or information requested 🎯
 - Be concise and crystal clear
+- Still use relevant emojis to keep it friendly 😊
 
 For NUMERICAL/PROBLEM questions:
 - Show step-by-step solution with mathematical precision 📝
 - Use multiple approaches when applicable (algebraic, geometric, calculus) 🔄
 - Point out common mistakes and conceptual traps ⚠️
 - Include proper units, significant figures, and mathematical notation 📊
+- Keep code comments minimal - only for complex logic 🤓
 
 🎯 JEE-SPECIFIC APPROACH:
 - Use exact mathematical terminology and notation 📚
@@ -131,7 +154,15 @@ For NUMERICAL/PROBLEM questions:
 - Include problem-solving strategies and shortcuts 🧠
 - Connect to previous year JEE patterns and difficulty levels 📊
 
-Your goal: Give JEE students EXACTLY what they need with exciting emojis! 🚀`;
+EMOJI USAGE RULES:
+- Start sections with subject emojis (⚡ Physics, 🧪 Chemistry, 📐 Mathematics)
+- Use emojis in bullet points ✅
+- Add emojis to highlight key concepts 💡
+- Use celebration emojis for achievements 🎉
+- Include relevant subject emojis throughout 🔬⚗️📊
+- Make every response feel lively and engaging! 😄
+
+Your goal: Give JEE students EXACTLY what they need with LOTS of exciting emojis! 🚀✨😊`;
 
 const FormattedMessageContent: React.FC<{ content: string }> = React.memo(({ content }) => {
     const { theme } = useTheme();
@@ -492,19 +523,25 @@ const ChatModule: React.FC<{ appMode?: 'datascience' | 'neet' | 'jee' }> = ({ ap
     const fetchGlobalHistory = useCallback(async () => {
         setIsLoadingHistory(true);
         try {
-            // First try to fetch from backend
-            const apiBase = window.location.hostname === 'localhost' ? 'http://localhost:5000' : '';
+            // Check if we're in development or production
+            const isProduction = window.location.hostname !== 'localhost';
             let history: GlobalHistoryItem[] = [];
             
-            try {
-                const response = await fetch(`${apiBase}/api/history/global`);
-                if (response.ok) {
-                    const data = await response.json();
-                    history = data || [];
+            if (!isProduction) {
+                // Only try backend in development
+                try {
+                    const response = await fetch('http://localhost:5000/api/history/global');
+                    if (response.ok) {
+                        const data = await response.json();
+                        history = data || [];
+                    }
+                } catch (backendError) {
+                    console.log('Backend not available, using mock data');
                 }
-            } catch (backendError) {
-                console.log('Backend not available, using mock data');
-                // Fallback to mock data when backend is not available
+            }
+            
+            // If no data from backend or in production, use mock data
+            if (history.length === 0) {
                 history = [
                     {
                         query: "What are the best practices for data preprocessing?",
@@ -552,6 +589,7 @@ const ChatModule: React.FC<{ appMode?: 'datascience' | 'neet' | 'jee' }> = ({ ap
             // Sort by timestamp (most recent first)
             history.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
             
+            console.log('Global history loaded:', history.length, 'items');
             setGlobalHistory(history);
             
         } catch (error) {
@@ -565,19 +603,25 @@ const ChatModule: React.FC<{ appMode?: 'datascience' | 'neet' | 'jee' }> = ({ ap
 
     const fetchAnalytics = useCallback(async () => {
         try {
-            // First try to fetch from backend
-            const apiBase = window.location.hostname === 'localhost' ? 'http://localhost:5000' : '';
+            // Check if we're in development or production
+            const isProduction = window.location.hostname !== 'localhost';
             let analytics: Analytics | null = null;
             
-            try {
-                const response = await fetch(`${apiBase}/api/analytics`);
-                if (response.ok) {
-                    const data = await response.json();
-                    analytics = data;
+            if (!isProduction) {
+                // Only try backend in development
+                try {
+                    const response = await fetch('http://localhost:5000/api/analytics');
+                    if (response.ok) {
+                        const data = await response.json();
+                        analytics = data;
+                    }
+                } catch (backendError) {
+                    console.log('Backend not available, using mock analytics');
                 }
-            } catch (backendError) {
-                console.log('Backend not available, using mock analytics');
-                // Fallback to mock data when backend is not available
+            }
+            
+            // If no data from backend or in production, use mock data
+            if (!analytics) {
                 analytics = {
                     totalSessions: 247,
                     totalQueries: 891,
@@ -816,7 +860,8 @@ const ChatModule: React.FC<{ appMode?: 'datascience' | 'neet' | 'jee' }> = ({ ap
                                         {globalHistory.length === 0 && !isLoadingHistory && (
                                             <div className="text-center py-12 text-gray-500 dark:text-gray-400">
                                                 <div className="text-6xl mb-4">📭</div>
-                                                <p>No global history available yet.</p>
+                                                <p>No community history available yet.</p>
+                                                <p className="text-sm mt-2">This might be due to backend unavailability.</p>
                                             </div>
                                         )}
                                     </div>
@@ -890,12 +935,12 @@ const ChatModule: React.FC<{ appMode?: 'datascience' | 'neet' | 'jee' }> = ({ ap
                 </div>
             </div>
 
-            {/* Input Section - Fixed at bottom with solid background */}
+            {/* Input Section - Fixed at bottom with transparent background */}
             <motion.div 
                 initial={{ y: 100, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ duration: 0.5, delay: 0.2 }}
-                className="flex-shrink-0 bg-gray-50 dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700"
+                className="flex-shrink-0 bg-transparent"
             >
                 <div className="max-w-5xl mx-auto px-6 py-6">
                     <form onSubmit={handleSubmit} className="relative">
