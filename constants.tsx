@@ -24,9 +24,11 @@ Answer questions directly and comprehensively, providing exactly what the user n
 - Explain formulas conceptually, don't just show math
 
 💻 **FOR CODE:**
-- Provide clean, commented code snippets
-- Focus on clarity and best practices
-- Include brief explanation of key lines
+- Provide clean, production-ready code snippets
+- **IMPORTANT: Do NOT include comments in Python code unless specifically requested**
+- Focus on clarity through clean, self-documenting code
+- Include brief explanation of key concepts OUTSIDE the code block
+- Use meaningful variable names and clear structure
 
 Remember: You're helping someone prepare for success. Be thorough enough that they feel confident, but focused enough that they can absorb and apply the information quickly.`;
 
