@@ -57,6 +57,39 @@ app.get('/api/history', async (req, res) => {
 });
 
 // Get global history - all users' recent queries (for global history view)
+app.get('/api/history/global', async (req, res) => {
+    try {
+        const limit = parseInt(req.query.limit) || 50;
+        
+        // Get all sessions sorted by last updated
+        const sessions = await ChatHistory.find()
+            .sort({ lastUpdated: -1 })
+            .limit(limit);
+
+        const globalHistory = [];
+        
+        sessions.forEach(session => {
+            session.userQueries.forEach(query => {
+                globalHistory.push({
+                    query: query.query,
+                    sessionId: session.sessionId,
+                    timestamp: query.timestamp
+                });
+            });
+        });
+        
+        // Sort by timestamp descending
+        globalHistory.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+        
+        // Return top N results
+        res.json(globalHistory.slice(0, limit));
+    } catch (error) {
+        console.error('Error fetching global history:', error);
+        res.status(500).json({ error: 'Failed to fetch global history' });
+    }
+});
+
+// Get global history - all users' recent queries (for global history view) - legacy route
 app.get('/api/history/global/recent', async (req, res) => {
     try {
         const limit = parseInt(req.query.limit) || 50;

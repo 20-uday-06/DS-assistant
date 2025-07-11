@@ -49,6 +49,37 @@ You'll need to set these environment variables in Netlify:
 
 ## Features After Deployment
 
+✅ **Community Questions**: Automatically sorted by recency (newest first)
+✅ **Smart Backend Detection**: Works locally and in production
+✅ **Solid Color Theme**: All gradients replaced with solid colors for better performance
+✅ **Premium Landing Page**: Clean, minimal design without large icons
+✅ **Responsive Design**: Works on desktop and mobile devices
+✅ **Graceful Fallbacks**: Uses mock data when backend is unavailable
+
+## Backend Integration
+
+The app automatically detects the environment:
+- **Local Development**: Uses mock data for community questions and analytics
+- **Production**: Attempts to connect to backend API, falls back to mock data if unavailable
+
+## API Endpoints (if backend is deployed)
+
+- `GET /api/history/global` - Get community questions (sorted by recency)
+- `GET /api/analytics` - Get usage analytics
+- `POST /api/history` - Save user queries
+- `GET /api/health` - Health check
+
+## Troubleshooting
+
+**Q: Community questions not showing?**
+A: The app uses mock data by default. If you want real community data, deploy the backend server.
+
+**Q: Gradients not displaying correctly?**
+A: All gradients have been replaced with solid colors for better compatibility.
+
+**Q: Mobile view issues?**
+A: The UI is fully responsive and optimized for mobile devices.
+
 ✅ **Working Features:**
 - AI Chat with interview-focused responses
 - Learning Hub with comprehensive educational content

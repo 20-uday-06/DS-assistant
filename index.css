@@ -41,6 +41,70 @@ textarea {
   line-height: 1.5;
 }
 
+/* Center textarea placeholder and content */
+textarea::placeholder {
+  opacity: 0.7;
+}
+
+/* Better chat input styling */
+.chat-input-textarea {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+/* Ensure body and html don't overflow but allow internal scrolling */
+html, body {
+  height: 100%;
+  overflow: hidden;
+}
+
+#root {
+  height: 100%;
+  overflow: hidden;
+}
+
+/* Allow scrolling within chat containers */
+.chat-scroll-container {
+  overflow-y: auto !important;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(107, 114, 128, 0.5) rgba(229, 231, 235, 0.5);
+}
+
+.chat-scroll-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.chat-scroll-container::-webkit-scrollbar-track {
+  background: rgba(229, 231, 235, 0.5);
+  border-radius: 4px;
+}
+
+.chat-scroll-container::-webkit-scrollbar-thumb {
+  background: rgba(107, 114, 128, 0.5);
+  border-radius: 4px;
+}
+
+.chat-scroll-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(107, 114, 128, 0.8);
+}
+
+.dark .chat-scroll-container {
+  scrollbar-color: rgba(156, 163, 175, 0.5) rgba(75, 85, 99, 0.5);
+}
+
+.dark .chat-scroll-container::-webkit-scrollbar-track {
+  background: rgba(75, 85, 99, 0.5);
+}
+
+.dark .chat-scroll-container::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.5);
+}
+
+.dark .chat-scroll-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.8);
+}
+
 /* Custom styles for better mathematical formula rendering */
 
 /* Ensure KaTeX formulas are properly spaced and visible */
