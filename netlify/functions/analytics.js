@@ -22,10 +22,18 @@ const connectToDatabase = async () => {
   }
 
   try {
-    const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/gemini-copilot';
+    const mongoUri = process.env.MONGODB_URI;
+    if (!mongoUri) {
+      throw new Error('MONGODB_URI environment variable not set');
+    }
+    
     await mongoose.connect(mongoUri, {
+      serverSelectionTimeoutMS: 5000, // 5 seconds timeout
+      socketTimeoutMS: 45000, // 45 seconds socket timeout
       bufferCommands: false,
+      bufferMaxEntries: 0
     });
+    
     isConnected = true;
     
     // Create model only if it doesn't exist
