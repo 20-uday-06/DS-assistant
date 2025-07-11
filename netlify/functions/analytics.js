@@ -1,28 +1,18 @@
 const mongoose = require('mongoose');
 
-// Chat History Schema  
+// Chat History Schema - Updated to match history-global.js
 const chatHistorySchema = new mongoose.Schema({
-  sessionId: {
-    type: String,
-    required: true,
-    index: true
-  },
-  query: {
-    type: String,
-    required: true
-  },
-  summary: {
-    type: String,
-    required: true
-  },
-  timestamp: {
-    type: Date,
-    default: Date.now,
-    index: true
-  }
+    sessionId: { type: String, required: true, unique: true },
+    summary: { type: String, required: true },
+    userQueries: [{
+        query: String,
+        timestamp: { type: Date, default: Date.now }
+    }],
+    createdAt: { type: Date, default: Date.now },
+    lastUpdated: { type: Date, default: Date.now }
 });
 
-const ChatHistory = mongoose.models.ChatHistory || mongoose.model('ChatHistory', chatHistorySchema);
+let ChatHistory;
 
 let isConnected = false;
 
@@ -37,6 +27,12 @@ const connectToDatabase = async () => {
       bufferCommands: false,
     });
     isConnected = true;
+    
+    // Create model only if it doesn't exist
+    if (!ChatHistory) {
+      ChatHistory = mongoose.model('ChatHistory', chatHistorySchema);
+    }
+    
     console.log('Connected to MongoDB');
   } catch (error) {
     console.error('MongoDB connection error:', error);
@@ -66,20 +62,39 @@ exports.handler = async (event, context) => {
   try {
     await connectToDatabase();
 
-    // Get analytics data
-    const totalQueries = await ChatHistory.countDocuments();
-    const totalSessions = await ChatHistory.distinct('sessionId').then(sessions => sessions.length);
-
-    // Get top topics (simplified - just count queries by first word)
-    const topTopics = await ChatHistory.aggregate([
+    // Get analytics data from sessions with userQueries
+    const totalSessions = await ChatHistory.countDocuments();
+    
+    // Get total queries by aggregating userQueries arrays
+    const totalQueriesResult = await ChatHistory.aggregate([
       {
         $project: {
-          firstWord: { $arrayElemAt: [{ $split: ['$query', ' '] }, 0] }
+          queryCount: { $size: '$userQueries' }
         }
       },
       {
         $group: {
-          _id: '$firstWord',
+          _id: null,
+          totalQueries: { $sum: '$queryCount' }
+        }
+      }
+    ]);
+    
+    const totalQueries = totalQueriesResult.length > 0 ? totalQueriesResult[0].totalQueries : 0;
+
+    // Get top topics from userQueries
+    const topTopics = await ChatHistory.aggregate([
+      {
+        $unwind: '$userQueries'
+      },
+      {
+        $project: {
+          firstWord: { $arrayElemAt: [{ $split: ['$userQueries.query', ' '] }, 0] }
+        }
+      },
+      {
+        $group: {
+          _id: { $toLower: '$firstWord' },
           count: { $sum: 1 }
         }
       },
@@ -115,10 +130,19 @@ exports.handler = async (event, context) => {
 
   } catch (error) {
     console.error('Function error:', error);
+    console.error('MongoDB URI available:', !!process.env.MONGODB_URI);
+    console.error('Error details:', error.message);
     return {
       statusCode: 500,
       headers,
-      body: JSON.stringify({ error: 'Internal server error' })
+      body: JSON.stringify({ 
+        error: 'Internal server error',
+        debug: {
+          hasMongoUri: !!process.env.MONGODB_URI,
+          errorMessage: error.message,
+          timestamp: new Date().toISOString()
+        }
+      })
     };
   }
 };

@@ -92,10 +92,19 @@ exports.handler = async (event, context) => {
         };
     } catch (error) {
         console.error('Error fetching global history:', error);
+        console.error('MongoDB URI available:', !!process.env.MONGODB_URI);
+        console.error('Error details:', error.message);
         return {
             statusCode: 500,
             headers,
-            body: JSON.stringify({ error: 'Failed to fetch global history' }),
+            body: JSON.stringify({ 
+                error: 'Failed to fetch global history',
+                debug: {
+                    hasMongoUri: !!process.env.MONGODB_URI,
+                    errorMessage: error.message,
+                    timestamp: new Date().toISOString()
+                }
+            }),
         };
     }
 };

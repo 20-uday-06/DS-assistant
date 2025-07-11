@@ -528,6 +528,7 @@ const ChatModule: React.FC<{ appMode?: 'datascience' | 'neet' | 'jee' }> = ({ ap
             let history: GlobalHistoryItem[] = [];
             
             try {
+                console.log('🔍 Fetching global history from:', endpoint);
                 const response = await fetch(endpoint);
                 if (response.ok) {
                     const data = await response.json();
@@ -535,7 +536,9 @@ const ChatModule: React.FC<{ appMode?: 'datascience' | 'neet' | 'jee' }> = ({ ap
                     console.log('✅ Fetched real backend data:', history.length, 'items from MongoDB');
                 } else {
                     console.error('❌ Backend response not ok:', response.status);
-                    throw new Error('Backend response not ok');
+                    const errorText = await response.text();
+                    console.error('❌ Error response:', errorText);
+                    throw new Error(`Backend response not ok: ${response.status}`);
                 }
             } catch (backendError) {
                 console.log('❌ Backend not available, using mock data for demo:', backendError);
@@ -590,6 +593,7 @@ const ChatModule: React.FC<{ appMode?: 'datascience' | 'neet' | 'jee' }> = ({ ap
             let analytics: Analytics | null = null;
             
             try {
+                console.log('🔍 Fetching analytics from:', endpoint);
                 const response = await fetch(endpoint);
                 if (response.ok) {
                     const data = await response.json();
@@ -597,7 +601,9 @@ const ChatModule: React.FC<{ appMode?: 'datascience' | 'neet' | 'jee' }> = ({ ap
                     console.log('✅ Fetched real analytics data from MongoDB:', analytics);
                 } else {
                     console.error('❌ Analytics response not ok:', response.status);
-                    throw new Error('Analytics response not ok');
+                    const errorText = await response.text();
+                    console.error('❌ Error response:', errorText);
+                    throw new Error(`Analytics response not ok: ${response.status}`);
                 }
             } catch (backendError) {
                 console.log('❌ Backend not available, using mock analytics for demo:', backendError);
