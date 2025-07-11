@@ -523,65 +523,48 @@ const ChatModule: React.FC<{ appMode?: 'datascience' | 'neet' | 'jee' }> = ({ ap
     const fetchGlobalHistory = useCallback(async () => {
         setIsLoadingHistory(true);
         try {
-            // Check if we're in development or production
-            const isProduction = window.location.hostname !== 'localhost';
+            // Use Netlify functions for both local dev and production
+            const endpoint = '/.netlify/functions/history-global';
             let history: GlobalHistoryItem[] = [];
             
-            if (!isProduction) {
-                // Only try backend in development
-                try {
-                    const response = await fetch('http://localhost:5000/api/history/global');
-                    if (response.ok) {
-                        const data = await response.json();
-                        history = data || [];
-                    }
-                } catch (backendError) {
-                    console.log('Backend not available, using mock data');
+            try {
+                const response = await fetch(endpoint);
+                if (response.ok) {
+                    const data = await response.json();
+                    history = data || [];
+                    console.log('✅ Fetched real backend data:', history.length, 'items from MongoDB');
+                } else {
+                    console.error('❌ Backend response not ok:', response.status);
+                    throw new Error('Backend response not ok');
                 }
-            }
-            
-            // If no data from backend or in production, use mock data
-            if (history.length === 0) {
+            } catch (backendError) {
+                console.log('❌ Backend not available, using mock data for demo:', backendError);
+                // Only use mock data as fallback when backend is truly unavailable
                 history = [
                     {
                         query: "What are the best practices for data preprocessing?",
-                        sessionId: "session-004",
+                        sessionId: "demo-004",
                         timestamp: new Date(Date.now() - 1800000).toISOString() // 30 minutes ago
                     },
                     {
                         query: "Explain the difference between supervised and unsupervised learning",
-                        sessionId: "session-002", 
+                        sessionId: "demo-002", 
                         timestamp: new Date(Date.now() - 3600000).toISOString() // 1 hour ago
                     },
                     {
                         query: "How to implement a neural network in Python?",
-                        sessionId: "session-003",
+                        sessionId: "demo-003",
                         timestamp: new Date(Date.now() - 7200000).toISOString() // 2 hours ago
                     },
                     {
                         query: "What is machine learning and how does it work?",
-                        sessionId: "session-001",
+                        sessionId: "demo-001",
                         timestamp: new Date(Date.now() - 86400000).toISOString() // 1 day ago
                     },
                     {
                         query: "How do I use pandas for data analysis?",
-                        sessionId: "session-005",
+                        sessionId: "demo-005",
                         timestamp: new Date(Date.now() - 10800000).toISOString() // 3 hours ago
-                    },
-                    {
-                        query: "What's the difference between linear and logistic regression?",
-                        sessionId: "session-006",
-                        timestamp: new Date(Date.now() - 14400000).toISOString() // 4 hours ago
-                    },
-                    {
-                        query: "How to handle missing values in datasets?",
-                        sessionId: "session-007",
-                        timestamp: new Date(Date.now() - 21600000).toISOString() // 6 hours ago
-                    },
-                    {
-                        query: "Explain random forest algorithm with example",
-                        sessionId: "session-008",
-                        timestamp: new Date(Date.now() - 25200000).toISOString() // 7 hours ago
                     }
                 ];
             }
@@ -589,12 +572,11 @@ const ChatModule: React.FC<{ appMode?: 'datascience' | 'neet' | 'jee' }> = ({ ap
             // Sort by timestamp (most recent first)
             history.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
             
-            console.log('Global history loaded:', history.length, 'items');
+            console.log('📊 Global history loaded:', history.length, 'items');
             setGlobalHistory(history);
             
         } catch (error) {
-            console.error('Failed to fetch global history:', error);
-            // Fallback to empty array
+            console.error('❌ Failed to fetch global history:', error);
             setGlobalHistory([]);
         } finally {
             setIsLoadingHistory(false);
@@ -603,25 +585,23 @@ const ChatModule: React.FC<{ appMode?: 'datascience' | 'neet' | 'jee' }> = ({ ap
 
     const fetchAnalytics = useCallback(async () => {
         try {
-            // Check if we're in development or production
-            const isProduction = window.location.hostname !== 'localhost';
+            // Use Netlify functions for both local dev and production
+            const endpoint = '/.netlify/functions/analytics';
             let analytics: Analytics | null = null;
             
-            if (!isProduction) {
-                // Only try backend in development
-                try {
-                    const response = await fetch('http://localhost:5000/api/analytics');
-                    if (response.ok) {
-                        const data = await response.json();
-                        analytics = data;
-                    }
-                } catch (backendError) {
-                    console.log('Backend not available, using mock analytics');
+            try {
+                const response = await fetch(endpoint);
+                if (response.ok) {
+                    const data = await response.json();
+                    analytics = data;
+                    console.log('✅ Fetched real analytics data from MongoDB:', analytics);
+                } else {
+                    console.error('❌ Analytics response not ok:', response.status);
+                    throw new Error('Analytics response not ok');
                 }
-            }
-            
-            // If no data from backend or in production, use mock data
-            if (!analytics) {
+            } catch (backendError) {
+                console.log('❌ Backend not available, using mock analytics for demo:', backendError);
+                // Only use mock data as fallback when backend is truly unavailable
                 analytics = {
                     totalSessions: 247,
                     totalQueries: 891,
@@ -681,8 +661,18 @@ const ChatModule: React.FC<{ appMode?: 'datascience' | 'neet' | 'jee' }> = ({ ap
         const userQueryText = input.trim();
         const summary = userQueryText.length > 100 ? userQueryText.substring(0, 100) + '...' : userQueryText;
         
-        // Save to history (async, don't wait)
-        sessionManager.saveUserQuery(userQueryText, summary).catch(console.error);
+        // Save to history (async, don't wait) and then refresh global history
+        sessionManager.saveUserQuery(userQueryText, summary)
+            .then((success) => {
+                if (success) {
+                    console.log('✅ User query saved, refreshing global history...');
+                    // Refresh global history after a short delay to ensure DB is updated
+                    setTimeout(() => {
+                        fetchGlobalHistory();
+                    }, 1000);
+                }
+            })
+            .catch(console.error);
 
         const newUserMessage: ChatMessage = { 
             id: Date.now().toString(), 
@@ -783,7 +773,7 @@ const ChatModule: React.FC<{ appMode?: 'datascience' | 'neet' | 'jee' }> = ({ ap
             streamingMessageRef.current = '';
             inputRef.current?.focus();
         }
-    }, [input, isLoading, messages, appMode]);
+    }, [input, isLoading, messages, appMode, fetchGlobalHistory]);
     
     return (
         <div className="flex flex-col h-full bg-gray-50 dark:bg-gray-900 overflow-hidden">

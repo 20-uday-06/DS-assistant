@@ -18,12 +18,8 @@ interface HistorySessionDetail {
 }
 
 const getApiBaseUrl = () => {
-  // In production (Netlify), use relative URLs to the same domain
-  if (window.location.hostname !== 'localhost') {
-    return '';
-  }
-  // In development, use localhost:5000
-  return 'http://localhost:5000';
+  // Always use Netlify functions for both dev and production
+  return '';
 };
 
 const API_BASE_URL = getApiBaseUrl();
@@ -31,11 +27,34 @@ const API_BASE_URL = getApiBaseUrl();
 export class HistoryService {
   static async getHistorySessions(): Promise<HistorySession[]> {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/history`);
+      // Use Netlify function to get history sessions
+      const response = await fetch(`${API_BASE_URL}/.netlify/functions/history-global`);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      return await response.json();
+      const data = await response.json();
+      
+      // Convert global history to sessions format
+      const sessions: HistorySession[] = [];
+      const sessionMap = new Map<string, HistorySession>();
+      
+      data.forEach((item: any) => {
+        if (!sessionMap.has(item.sessionId)) {
+          sessionMap.set(item.sessionId, {
+            sessionId: item.sessionId,
+            summary: item.query,
+            createdAt: item.timestamp,
+            lastUpdated: item.timestamp,
+            queryCount: 1
+          });
+        } else {
+          const session = sessionMap.get(item.sessionId)!;
+          session.queryCount++;
+          session.lastUpdated = item.timestamp;
+        }
+      });
+      
+      return Array.from(sessionMap.values());
     } catch (error) {
       console.error('Failed to fetch history sessions:', error);
       return [];
@@ -44,14 +63,33 @@ export class HistoryService {
 
   static async getSessionDetail(sessionId: string): Promise<HistorySessionDetail | null> {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/history/${sessionId}`);
+      // Use Netlify function to get session detail
+      const response = await fetch(`${API_BASE_URL}/.netlify/functions/history-global`);
       if (!response.ok) {
         if (response.status === 404) {
           return null;
         }
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      return await response.json();
+      const data = await response.json();
+      
+      // Filter data for specific session
+      const sessionQueries = data.filter((item: any) => item.sessionId === sessionId);
+      
+      if (sessionQueries.length === 0) {
+        return null;
+      }
+      
+      return {
+        sessionId,
+        summary: sessionQueries[0].query,
+        userQueries: sessionQueries.map((item: any) => ({
+          query: item.query,
+          timestamp: item.timestamp
+        })),
+        createdAt: sessionQueries[sessionQueries.length - 1].timestamp,
+        lastUpdated: sessionQueries[0].timestamp
+      };
     } catch (error) {
       console.error('Failed to fetch session detail:', error);
       return null;
@@ -60,15 +98,19 @@ export class HistoryService {
 
   static async saveUserQuery(sessionId: string, userQuery: string, summary?: string): Promise<boolean> {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/history`, {
+      // Use Netlify function to save chat session
+      const response = await fetch(`${API_BASE_URL}/.netlify/functions/save-chat`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           sessionId,
-          userQuery,
-          summary,
+          summary: summary || userQuery,
+          userQueries: [{
+            query: userQuery,
+            timestamp: new Date().toISOString()
+          }]
         }),
       });
 
@@ -76,9 +118,10 @@ export class HistoryService {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
+      console.log('✅ Chat session saved to MongoDB successfully');
       return true;
     } catch (error) {
-      console.error('Failed to save user query:', error);
+      console.error('❌ Failed to save user query:', error);
       return false;
     }
   }
