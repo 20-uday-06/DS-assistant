@@ -48,7 +48,7 @@ class GeminiService {
         
         try {
             const responseStream = await ai.models.generateContentStream({
-                model: 'gemini-2.5-flash-preview-04-17',
+                model: 'gemini-2.5-flash-preview-05-20',
                 contents,
                 config: { 
                     systemInstruction,
